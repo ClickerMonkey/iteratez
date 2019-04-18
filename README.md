@@ -2,32 +2,23 @@
 
 A simple yet powerful iterator for simple and complex types. Out of the box you can iterate over arrays, objects, and trees, but you can provide iteration capabilites to your own code no matter how complex the type (dynamically calculated, etc).
 
-The iterator is lazy, so you can chain `where`/`map`/`reverse`/`exclude`/`intersect`/`sorted`/`unique`/`duplicates`/`take`/`skip`/`drop`/`append`/`prepend`/`gt`/`gte`/`lt`/`lte`s and iteration is not done until you `empty`/`has`/`contains`/`first`/`last`/`count`/`list`/`object`/`reduce`/`min`/`max`/`iterate`/`erase`/`overwrite`/`extract`/etc.
+The iterator is lazy, so you can chain "views" and iteration is not done until you perform "operations" or "modifiers" to the underlying source.
 
 ### Features
-\* = you can pass a where function in to test the items
 
 - Array, object, and tree iterators out of the box.
-- Stop the iterator at any time (and optionally return a result)
+- Iteration is lazy, so iteration is only done when it absolutely needs to be.
+- Some "operations" can exit early and cease iteration saving time and resources.
+- When iterating, you can stop at any time.
 - If the underlying source supports it, remove an item.
 - If the underlying source supports it, replace an item.
-- \* Check to see if an iterator is empty.
-- \* Count the number of items.
-- \* Get the first item.
-- \* Get the last item.
-- \* Convert the items into an array.
-- \* Convert the items into an object given a function to obtain a key from an item.
-- Remove all items from the source that don't pass a test.
-- Return a new iterator for all the items that pass a test.
-- Reduce the values in the iterator down to a single value.
-- Map the items in the iterator to a new iterator.
-- Iterate over only the first `X` items.
-- Skip over the first `X` items.
-- Iterate over the items with a callback.
-- Append one or more iterators to the end of the current one.
-- Prepend one or more iterators to the beginning of the current one.
-- Return an iterator that goes in reverse.
-- Custom iterator.
+- You can chain "views" which don't cause iteration until an "operation" or "modifier" are called.
+  - `where` `map` `reverse` `exclude` `intersect` `sorted` `unique` `duplicates` `take` `skip` `drop` `append` `prepend` `gt` `gte` `lt` `lte`
+- You can call "modifiers" to affect the underlying source.
+  - `erase` `overwrite` `extract`
+- You can call "operations" to iterate and produce a result.
+  - `empty` `has` `contains` `first` `last` `count` `list` `object` `reduce` `min` `max` `iterate` `erase` `overwrite` `extract`
+- Create your own iterator.
 
 You can see all of these features in the examples below.
 
