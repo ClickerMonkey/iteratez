@@ -17,7 +17,7 @@ The iterator is lazy, so you can chain "views" and iteration is not done until y
 - You can call "modifiers" to affect the underlying source.
   - `erase` `overwrite` `extract`
 - You can call "operations" to iterate and produce a result.
-  - `empty` `has` `contains` `first` `last` `count` `list` `object` `reduce` `min` `max` `iterate` `erase` `overwrite` `extract`
+  - `empty` `has` `contains` `first` `last` `count` `list` `object` `reduce` `min` `max` `iterate`
 - Create your own iterator.
 
 You can see all of these features in the examples below.
