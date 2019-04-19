@@ -301,6 +301,20 @@ describe('Iterate', () => {
     expect( b.list() ).toEqual( [1, 0, 2, 3, 0, 0, 0, 3, 0, 0] );
   });
 
+  it('sub', () =>
+  {
+    const a = Iterate.array([1, 2, 3, 4, 5, 6, 7, 8]);
+    const b: number[] = [];
+
+    a.where(x => x > 3)
+      .sub(s => s.where(x => x % 3 === 0).erase() )
+      .sub(s => s.where(x => x % 3 === 2).erase() )
+      .list(b);
+
+    expect( a.list() ).toEqual( [1, 2, 3, 4, 7] );
+    expect( b ).toEqual( [4, 7] );
+  });
+
   interface Node<T> {
     value: T;
     children?: Node<T>[];   

@@ -474,6 +474,21 @@ export class Iterate<T>
   }
 
   /**
+   * An sub-view which allows modifiers and operations to be perfomed in a
+   * separate chain and once done you can resume the chain after this sub.
+   * 
+   * @param subIterate A function which takes the iterator at this point and 
+   *    performs any modifiers and operations.
+   * @returns The reference to this iterator.
+   */
+  public sub (subIterate: (sub: this) => any): this
+  {
+    subIterate(this);
+
+    return this;
+  }
+
+  /**
    * Returns a view of this iterator. This allows other views to be more DRY.
    * 
    * @param getData Get any necessary data needed for the view.
