@@ -13,7 +13,7 @@ The iterator is lazy, so you can chain "views" and iteration is not done until y
 - If the underlying source supports it, remove an item.
 - If the underlying source supports it, replace an item.
 - You can chain "views" which don't cause iteration until an "operation" or "modifier" are called.
-  - `where` `not` `map` `reverse` `exclude` `intersect` `sorted` `unique` `duplicates` `take` `skip` `drop` `append` `prepend` `gt` `gte` `lt` `lte` `sub` `readonly`
+  - `where` `not` `map` `reverse` `exclude` `intersect` `sorted` `unique` `duplicates` `take` `skip` `drop` `append` `prepend` `gt` `gte` `lt` `lte` `sub` `readonly` `split`
 - You can call "modifiers" to affect the underlying source.
   - `erase` `overwrite` `extract`
 - You can call "operations" to iterate and produce a result.
@@ -122,6 +122,8 @@ source.lt(value, comparator?); // all items less than value
 source.lte(value, comparator?); // all items less/equal to value
 source.sub(s => s.where(x => !!x.male).erase()); // sub operation
 source.readonly(); // all subsequent modifiers are ignored
+source.split(x => x.male); // { pass, fail }
+source.split(x => x.male, (pass, fail) => {}): // two iterators
 
 // ============ Logic ============ 
 

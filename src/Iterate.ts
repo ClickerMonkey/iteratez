@@ -46,16 +46,17 @@ import { IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateS
  * - `unique`: that has only unique values.
  * - `duplicates`: that has all the duplicate values.
  * - `readonly`: that ignores modifiers.
- * - `take`: Returns an iterator that only iterates over the first X items.
- * - `skip`: Returns an iterator that skips the first X items.
- * - `drop`: Returns an iterator that drops off the last X items.
- * - `append`: Returns an iterator that is the original iterator + one or more iterators specified.
- * - `prepend`: Returns an iterator that is one or more iterators specified + the original iterator.
+ * - `take`: that only iterates over the first X items.
+ * - `skip`: that skips the first X items.
+ * - `drop`: that drops off the last X items.
+ * - `append`: that is the original iterator + one or more iterators specified.
+ * - `prepend`: that is one or more iterators specified + the original iterator.
  * - `gt`: that only has items greater than a value.
  * - `gte`: that only has items greater than or equal to a value.
  * - `lt`: that only has items less than a value.
  * - `lte`: that only has items less than or equal to a value.
  * - `sub`: that is this, but allows a function to perform sub operations
+ * - `split`: Splits the items into two iterators (pass/fail) based on a condition.
  * 
  * The following static functions exist to help iterate simple sources:
  *
@@ -492,7 +493,7 @@ export class Iterate<T>
   }
 
   /**
-   * An sub-view which allows modifiers and operations to be perfomed in a
+   * A sub-view which allows modifiers and operations to be perfomed in a
    * separate chain and once done you can resume the chain after this sub.
    * 
    * @param subIterate A function which takes the iterator at this point and 
@@ -504,6 +505,33 @@ export class Iterate<T>
     subIterate(this);
 
     return this;
+  }
+
+  /**
+   * Provides split views of the items in this iterator, one iterator gets
+   * passed items and the other iterator gets the failed items.
+   * 
+   * You can pass a function as a second argument which recieves two iterators
+   * for pass and fail respectively. This will be returned in that scenario.
+   * 
+   * If you don't pass a second function an object will be returned with two
+   * properties: pass and fail.
+   */
+  public split (pass: IterateFilter<T>): { pass: Iterate<T>, fail: Iterate<T> };
+  public split (pass: IterateFilter<T>, handle: (pass: Iterate<T>, fail: Iterate<T>) => any): this
+  public split (by: IterateFilter<T>, handle?: (pass: Iterate<T>, fail: Iterate<T>) => any): any
+  {
+    const pass = this.where(by);
+    const fail = this.not(by);
+
+    if (handle)
+    {
+      handle(pass, fail);
+
+      return this;
+    }
+
+    return { pass, fail };
   }
 
   /**

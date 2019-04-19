@@ -324,6 +324,26 @@ describe('Iterate', () => {
     expect( b ).toEqual( [4, 7] );
   });
 
+  it('split', () =>
+  {
+    const a = Iterate.array([1, 2, 3, 4, 5, 6, 7, 8]);
+    const b: number[] = [];
+    const c: number[] = [];
+
+    a.split(x => x % 2 === 0, (pass, fail) => {
+      pass.list(b);
+      fail.list(c);
+    });
+
+    expect( b ).toEqual( [2, 4, 6, 8] );
+    expect( c ).toEqual( [1, 3, 5, 7] );
+
+    const { pass, fail } = a.split(x => x % 2 === 0);
+
+    expect( pass.list() ).toEqual( [2, 4, 6, 8] );
+    expect( fail.list() ).toEqual( [1, 3, 5, 7] );
+  });
+
   it('list', () => 
   {
     expect( Iterate.array([]).list() ).toEqual( [] );
