@@ -24,7 +24,7 @@ import { IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateS
  * - `array`: Builds an array of the items in the view.
  * - `set`: Builds a Set of the items in the view.
  * - `object`: Builds an object of the items in the view.
- * - `tuples`: Builds an array of `[key, value]` in the view.
+ * - `entries`: Builds an array of `[key, value]` in the view.
  * - `group`: Builds an object of item arrays grouped by a value derived from each item.
  * - `reduce`: Reduces the items in the view down to a single value.
  * - `min`: Returns the minimum item in the view.
@@ -80,7 +80,7 @@ import { IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateS
  * - `empty`: Iterates nothing.
  * - `iterable`: Iterates any collection that implements iterable.
  * - `join`: Returns an iterator that iterates over one or more iterators.
- * - `tuples`: Iterates an array of `[key, value]` tuples.
+ * - `entries`: Iterates an array of `[key, value]` entries.
  *
  * @typeparam T The type of item being iterated.
  */
@@ -462,12 +462,12 @@ export class Iterate<T, K, S>
   }
 
   /**
-   * An operation that builds an array of [key, item] tuples from this view.
+   * An operation that builds an array of [key, item] entries from this view.
    *
-   * @param out The array to place the tuples in.
-   * @returns The reference to `out` which has had tuples added to it.
+   * @param out The array to place the entries in.
+   * @returns The reference to `out` which has had entries added to it.
    */
-  public tuples (out: Array<[K, T]> = []): Array<[K, T]>
+  public entries (out: Array<[K, T]> = []): Array<[K, T]>
   {
     this.iterate((item, itemKey) => out.push([itemKey, item]));
 
@@ -592,7 +592,7 @@ export class Iterate<T, K, S>
 
     this.iterate((item, key, iterator) => extracted.push([key, item]) && iterator.remove());
 
-    return Iterate.tuples(extracted);
+    return Iterate.entries(extracted);
   }
 
   /**
@@ -956,7 +956,7 @@ export class Iterate<T, K, S>
    */
   public copy (): Iterate<T, K, Array<[K, T]>>
   {
-    return Iterate.tuples(this.tuples());
+    return Iterate.entries(this.entries());
   }
 
   /**
@@ -970,7 +970,7 @@ export class Iterate<T, K, S>
   {
     return new Iterate<T, K, S>(next =>
     {
-      const items: Array<[K, T]> = this.tuples();
+      const items: Array<[K, T]> = this.entries();
       const actions: IterateAction[] = [];
       const replaces: T[] = [];
       const original: T[] = [];
@@ -1192,7 +1192,7 @@ export class Iterate<T, K, S>
    * @param items The array of items to iterate.
    * @returns A new iterator for the given array.
    */
-  public static tuples<T, K> (items: Array<[K, T]>): Iterate<T, K, Array<[K, T]>>
+  public static entries<T, K> (items: Array<[K, T]>): Iterate<T, K, Array<[K, T]>>
   {
     return new Iterate<T, K, Array<[K, T]>>(iterator =>
     {
