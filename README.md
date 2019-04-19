@@ -10,16 +10,16 @@ The iterator is lazy, so you can chain "views" and iteration is not done until y
 
 - Array, object, tree, set, map, linked-list, and iterables out of the box.
 - Iteration is lazy, so iteration is only done when it absolutely needs to be.
-- Some [operations](operations) can exit early and cease iteration saving time and resources.
+- Some [operations](#operations) can exit early and cease iteration saving time and resources.
 - When iterating, you can stop at any time.
-- If the underlying source supports it, [remove](mutations) an item.
-- If the underlying source supports it, [replace](mutations) an item.
-- You can chain [views](views) which don't cause iteration until an [operation](operations) or [mutation](mutations) are called.
-- You can call [mutations](mutations) to affect the underlying source.
-- You can call [operations](operations) to iterate and produce a result.
-- Create your own iterator.
+- If the underlying source supports it, [remove](#mutations) an item.
+- If the underlying source supports it, [replace](#mutations) an item.
+- You can chain [views](#views) which don't cause iteration until an [operation](#operations) or [mutation](#mutations) are called.
+- You can call [mutations](#mutations) to affect the underlying source.
+- You can call [operations](#operations) to iterate and produce a result.
+- [Create your own iterator.](#custom-iterators)
 
-You can see all of these features in the examples below.
+You can see all of these features in the [examples](#examples) below.
 
 ### Views
 Returns an iterator...
@@ -353,16 +353,16 @@ function getDateIterator ([start, max]: DateRange)
       switch (iter.act(value, key)) 
       {
         // stop all iteration
-        case IterateAction.Stop:
+        case IterateAction.STOP:
           return;
 
         // remove this value, and subsequentally all children from tree
-        case IterateAction.Remove:
+        case IterateAction.REMOVE:
           // doesn't apply here, this is a dynamic set
           break;
 
         // replace the value
-        case IterateAction.Replace:
+        case IterateAction.REPLACE:
           // doesn't apply here, this is a dynamic set
           break;
       }
