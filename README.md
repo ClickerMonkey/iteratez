@@ -17,7 +17,7 @@ The iterator is lazy, so you can chain "views" and iteration is not done until y
 - You can call "modifiers" to affect the underlying source.
   - `erase` `overwrite` `extract`
 - You can call "operations" to iterate and produce a result.
-  - `empty` `has` `contains` `first` `last` `count` `list` `object` `reduce` `min` `max` `iterate` `set` `copy`
+  - `empty` `has` `contains` `first` `last` `count` `list` `object` `reduce` `min` `max` `iterate` `set` `copy` `group`
 - Create your own iterator.
 
 You can see all of these features in the examples below.
@@ -76,6 +76,7 @@ let first = source.first(); // T
 let last = source.last(); // T
 let count = source.count(); // number
 let array = source.list(); // T[]
+let groups = source.group(item => item.age); // { [age]: T[] }
 let set = source.set(); // Set<T>
 let sameArray = source.list(existingArray); // T[]
 let personById = source.object(item => item.id); // { [item.id]: item }

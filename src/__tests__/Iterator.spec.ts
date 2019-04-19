@@ -371,6 +371,17 @@ describe('Iterate', () => {
     expect( Iterate.array([1, 2]).set() ).toEqual( new Set([1, 2]) );
   });
 
+  it('group', () =>
+  {
+    const groups = Iterate.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).group(x => x % 3);
+
+    expect( groups ).toEqual({
+      0: [0, 3, 6, 9],
+      1: [1, 4, 7],
+      2: [2, 5, 8]
+    });
+  });
+
   it('iterable', () =>
   {
     expect( Iterate.iterable([1, 2, 3]).list() ).toEqual( [1, 2, 3] );

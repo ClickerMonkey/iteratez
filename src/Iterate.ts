@@ -24,6 +24,7 @@ import { IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateS
  * - `list`: Builds an array of the items in the view.
  * - `set`: Builds a Set of the items in the view.
  * - `object`: Builds an object of the items in the view.
+ * - `group`: Builds an object of item arrays grouped by a value derived from each item.
  * - `reduce`: Reduces the items in the view down to a single value.
  * - `min`: Returns the minimum item in the view.
  * - `max`: Returns the maximum item in the view.
@@ -414,6 +415,33 @@ export class Iterate<T>
   public set (out: Set<T> = new Set()): Set<T>
   {
     this.iterate(item => out.add( item ));
+
+    return out;
+  }
+
+  /**
+   * An operation that returns an object with arrays of items where the 
+   * property of the object is a key returned by a function.
+   * 
+   * @param by A function to get the key from an item.
+   * @param out The object to add groups to.
+   * @returns The reference to `out` which has had items added to it.
+   */
+  public group<G extends { [by: string]: T[] }> (by: (item: T) => any, out: G = Object.create(null)): G
+  {
+    this.iterate(item => 
+    {
+      const key = by(item);
+
+      if (key in out) 
+      {
+        out[key].push(item);
+      } 
+      else 
+      {
+        out[key] = [item];
+      }
+    });
 
     return out;
   }
