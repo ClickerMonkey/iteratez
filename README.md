@@ -116,7 +116,7 @@ source.reverse(); // items in reverse
 source.exclude(anotherSource); // not shared items
 source.intersect(anotherSource); // shared items
 source.sorted(comparator?); // sorted by a comparator
-source.shuffle(); // randomly orders
+source.shuffle(times?); // randomly orders
 source.unique(equality?); // unique items only
 source.duplicates(onlyOnce?); // duplicate items only
 source.take(10); // first 10 items
@@ -141,6 +141,12 @@ source.withComparator((a, b) => number);
 
 // equality check used for contains/exclude/intersect/unique/duplicates
 source.withEquality((a, b) => boolean);
+
+// Pre-defined logic
+source.numbers(ascending?, nullsFirst?); // number logic
+source.strings(sensitive?, ascending?, nullsFirst?); // string logic
+source.dates(equalityTimespan?, utc?, ascending?, nullsFirst?); // date logic
+source.desc(); // reverse comparison logic
 
 
 // ============ Examples ============ 

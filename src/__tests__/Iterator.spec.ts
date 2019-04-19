@@ -81,14 +81,14 @@ describe('Iterate', () => {
   {
     expect( Iterate.array([1, 2, 3]).first() ).toEqual(1);
     expect( Iterate.array([1, 2, 3]).reverse().first() ).toEqual(3);
-    expect( Iterate.array([2, 3, 1]).withComparator(Iterate.COMPARE_NUMBER).sorted().first() ).toEqual(1);
+    expect( Iterate.array([2, 3, 1]).numbers().sorted().first() ).toEqual(1);
   });
 
   it('last', () =>
   {
     expect( Iterate.array([1, 2, 3]).last() ).toEqual(3);
     expect( Iterate.array([1, 2, 3]).reverse().last() ).toEqual(1);
-    expect( Iterate.array([2, 3, 1]).sorted(Iterate.COMPARE_NUMBER).first() ).toEqual(1);
+    expect( Iterate.array([2, 3, 1]).numbers().sorted().last() ).toEqual(3);
   });
 
   it('count', () =>
@@ -99,14 +99,34 @@ describe('Iterate', () => {
 
   it('min', () =>
   {
-    expect( Iterate.array([1, 0, 3, 2]).min(Iterate.COMPARE_NUMBER) ).toEqual(0);
-    expect( Iterate.array([1, 0, 3, 2]).desc(Iterate.COMPARE_NUMBER).min() ).toEqual(3);
+    expect( Iterate.array([1, 0, 3, 2]).numbers().min() ).toEqual(0);
+    expect( Iterate.array([1, 0, 3, 2]).numbers().desc().min() ).toEqual(3);
   });
 
   it('max', () =>
   {
-    expect( Iterate.array([1, 0, 3, 2]).max(Iterate.COMPARE_NUMBER) ).toEqual(3);
-    expect( Iterate.array([1, 0, 3, 2]).desc(Iterate.COMPARE_NUMBER).max() ).toEqual(0);
+    expect( Iterate.array([1, 0, 3, 2]).numbers().max() ).toEqual(3);
+    expect( Iterate.array([1, 0, 3, 2]).numbers().desc().max() ).toEqual(0);
+  });
+
+  it('numbers', () => 
+  {
+    const a = Iterate.array(['a', 1, 3, null, undefined, 6, 4]);
+
+    expect( a.numbers(true, true).sorted().array() ).toEqual( ['a', null, undefined, 1, 3, 4, 6] );
+    expect( a.numbers(false, true).sorted().array() ).toEqual( ['a', null, undefined, 6, 4, 3, 1] );
+    expect( a.numbers(true, false).sorted().array() ).toEqual( [1, 3, 4, 6, 'a', null, undefined] );
+    expect( a.numbers(false, false).sorted().array() ).toEqual( [6, 4, 3, 1, 'a', null, undefined] );
+  });
+
+  it('strings', () => 
+  {
+    const a = Iterate.array([1, 'a', 'c', null, undefined, 'g', 'e']);
+
+    expect( a.strings(true, true, true).sorted().array() ).toEqual( [1, null, undefined, 'a', 'c', 'e', 'g'] );
+    expect( a.strings(true, false, true).sorted().array() ).toEqual( [1, null, undefined, 'g', 'e', 'c', 'a'] );
+    expect( a.strings(true, true, false).sorted().array() ).toEqual( ['a', 'c', 'e', 'g', 1, null, undefined] );
+    expect( a.strings(true, false, false).sorted().array() ).toEqual( ['g', 'e', 'c', 'a', 1, null, undefined] );
   });
 
   it('delete', () =>
@@ -209,7 +229,7 @@ describe('Iterate', () => {
 
     expect( b ).toEqual( [1, 2, 3] );
 
-    expect( Iterate.array([1, 5, 2, 3, 4]).sorted(Iterate.COMPARE_NUMBER).take(3).array() ).toEqual( [1, 2, 3] );
+    expect( Iterate.array([1, 5, 2, 3, 4]).numbers().sorted().take(3).array() ).toEqual( [1, 2, 3] );
   })
 
   it('drop', () =>
@@ -262,22 +282,22 @@ describe('Iterate', () => {
 
   it('gt', () =>
   {
-    expect( Iterate.array([1, 2, 3, 4, 5]).gt(3, Iterate.COMPARE_NUMBER).array() ).toEqual( [4, 5] );
+    expect( Iterate.array([1, 2, 3, 4, 5]).numbers().gt(3).array() ).toEqual( [4, 5] );
   });
 
   it('gte', () =>
   {
-    expect( Iterate.array([1, 2, 3, 4, 5]).gte(3, Iterate.COMPARE_NUMBER).array() ).toEqual( [3, 4, 5] );
+    expect( Iterate.array([1, 2, 3, 4, 5]).numbers().gte(3).array() ).toEqual( [3, 4, 5] );
   });
 
   it('lt', () =>
   {
-    expect( Iterate.array([1, 2, 3, 4, 5]).lt(3, Iterate.COMPARE_NUMBER).array() ).toEqual( [1, 2] );
+    expect( Iterate.array([1, 2, 3, 4, 5]).numbers().lt(3).array() ).toEqual( [1, 2] );
   });
 
   it('lte', () =>
   {
-    expect( Iterate.array([1, 2, 3, 4, 5]).lte(3, Iterate.COMPARE_NUMBER).array() ).toEqual( [1, 2, 3] );
+    expect( Iterate.array([1, 2, 3, 4, 5]).numbers().lte(3).array() ).toEqual( [1, 2, 3] );
   });
 
   it('exclude', () =>
@@ -298,7 +318,7 @@ describe('Iterate', () => {
   it('sorted', () =>
   {
     const a = Iterate.array([1, 6, 2, 3, 8, 7, 0, 3]);
-    const aSorted = a.sorted(Iterate.COMPARE_NUMBER);
+    const aSorted = a.numbers().sorted();
 
     expect( aSorted.array() ).toEqual( [0, 1, 2, 3, 3, 6, 7, 8] );
     expect( aSorted.take(3).array() ).toEqual( [0, 1, 2] );
@@ -306,7 +326,7 @@ describe('Iterate', () => {
     expect( a.array() ).toEqual( [6, 3, 8, 7, 3] );
 
     const b = Iterate.array([1, 6, 2, 3, 8, 7, 0, 3, 7, 6]);
-    b.sorted(Iterate.COMPARE_NUMBER).skip(5).overwrite(0);
+    b.numbers().sorted().skip(5).overwrite(0);
     expect( b.array() ).toEqual( [1, 0, 2, 3, 0, 0, 0, 3, 0, 0] );
   });
 
