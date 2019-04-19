@@ -407,6 +407,12 @@ describe('Iterate', () => {
     expect( Iterate.object({x: 1, y: 2}).map() ).toEqual( new Map([['x', 1], ['y', 2]]) );
   });
 
+  it('keys', () =>
+  {
+    expect( Iterate.object({x: 1, y: 2, z: 3}).keys().array() ).toEqual( ['x', 'y', 'z'] );
+    expect( Iterate.object({x: 1, y: 2, z: 3}).sub(s => s.keys().take(1).delete()).array() ).toEqual( [2, 3] );
+  });
+
   it('group', () =>
   {
     const groups = Iterate.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).group(x => x % 3);

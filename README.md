@@ -15,11 +15,11 @@ The iterator is lazy, so you can chain "views" and iteration is not done until y
 - If the underlying source supports it, remove an item.
 - If the underlying source supports it, replace an item.
 - You can chain "views" which don't cause iteration until an "operation" or "mutation" are called.
-  - `where` `not` `transform` `reverse` `exclude` `intersect` `sorted` `unique` `duplicates` `take` `skip` `drop` `append` `prepend` `gt` `gte` `lt` `lte` `sub` `readonly` `split` `shuffle`
+  - `where` `not` `transform` `reverse` `exclude` `intersect` `sorted` `unique` `duplicates` `take` `skip` `drop` `append` `prepend` `gt` `gte` `lt` `lte` `sub` `readonly` `split` `shuffle` `keys` `values`
 - You can call "mutations" to affect the underlying source.
   - `delete` `overwrite` `extract`
 - You can call "operations" to iterate and produce a result.
-  - `empty` `has` `contains` `first` `last` `count` `array` `object` `reduce` `min` `max` `iterate` `set` `copy` `group`
+  - `empty` `has` `contains` `first` `last` `count` `array` `object` `reduce` `min` `max` `iterate` `set` `copy` `group` `map` `entries`
 - Create your own iterator.
 
 You can see all of these features in the examples below.
@@ -38,6 +38,9 @@ let source = Iterate.object({
 });
 let source = Iterate.iterable(...source);
 let source = Iterate.entries( ... );
+let source = Iterate.map( ... );
+let source = Iterate.set( ... );
+let source = Iterate.hasEntries( Map | Set | Array | ReadonlyArray | ReadonlyMap | ReadonlySet | Int8Array | ... );
 let source = Iterate.tree( ... )(startingNode);
 let source = Iterate.linked( ... )(startingNode, previousNode);
 let source = yourSource.yourIteratorGenerator();
@@ -121,6 +124,8 @@ source.sorted(comparator?); // sorted by a comparator
 source.shuffle(times?); // randomly orders
 source.unique(equality?); // unique items only
 source.duplicates(onlyOnce?); // duplicate items only
+source.keys(); // just the keys (index based), delete mutation works
+source.values(); // just the values (index based)
 source.take(10); // first 10 items
 source.skip(5); // after first 5 items
 source.drop(3); // ignore last 3

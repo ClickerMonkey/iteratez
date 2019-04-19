@@ -25,6 +25,7 @@ import { IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateS
  * - `set`: Builds a Set of the items in the view.
  * - `object`: Builds an object of the items in the view.
  * - `entries`: Builds an array of `[key, value]` in the view.
+ * - `map`: Builds a Map of the items and keys in the view.
  * - `group`: Builds an object of item arrays grouped by a value derived from each item.
  * - `reduce`: Reduces the items in the view down to a single value.
  * - `min`: Returns the minimum item in the view.
@@ -50,6 +51,8 @@ import { IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateS
  * - `unique`: that has only unique values.
  * - `duplicates`: that has all the duplicate values.
  * - `readonly`: that ignores mutations.
+ * - `keys`: only for the keys of the items (replace not supported).
+ * - `values`: only for the values of the items (new key is index based).
  * - `take`: that only iterates over the first X items.
  * - `skip`: that skips the first X items.
  * - `drop`: that drops off the last X items.
@@ -77,6 +80,9 @@ import { IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateS
  * - `object`: Iterates the properties of an object, optionally just the properties explicitly set on the object.
  * - `tree`: Iterates trees.
  * - `linked`: Iterates linked-lists.
+ * - `map`: Iterates Maps
+ * - `set`: Iterates Sets
+ * - `hasEntries`: Iterates any object which has the `entries()` iterator.
  * - `empty`: Iterates nothing.
  * - `iterable`: Iterates any collection that implements iterable.
  * - `join`: Returns an iterator that iterates over one or more iterators.
@@ -140,7 +146,7 @@ export class Iterate<T, K, S>
    *
    * @param source The source of items to iterator.
    */
-  public constructor (source: IterateSource<T, K, S>, parent?: Iterate<T, K, S>)
+  public constructor (source: IterateSource<T, K, S>, parent?: Iterate<T, any, any>)
   {
     this.source = source;
 
@@ -658,6 +664,64 @@ export class Iterate<T, K, S>
     }
 
     return { pass, fail };
+  }
+
+  /**
+   * Returns a view of just the keys in this view. Any mutations done to the 
+   * keys view affect the underlying source.
+   */
+  public keys (): Iterate<K, number, S>
+  {
+    return new Iterate<K, number, S>(next =>
+    {
+      let index = 0;
+
+      this.iterate((item, itemKey, prev) =>
+      {
+        switch (next.act( itemKey, index++ ))
+        {
+          case IterateAction.STOP:
+            prev.stop();
+            break;
+          case IterateAction.REMOVE:
+            prev.remove();
+            break;
+          case IterateAction.REPLACE:
+            // not supported
+            break;
+        }
+      });
+
+    });
+  }
+
+  /**
+   * Returns a view of just the values in this view. Any mutations done to the 
+   * values view affect the underlying source.
+   */
+  public values (): Iterate<T, number, S>
+  {
+    return new Iterate<T, number, S>(next =>
+    {
+      this.iterate((item, itemKey, prev) =>
+      {
+        let index = 0;
+
+        switch (next.act( item, index++ ))
+        {
+          case IterateAction.STOP:
+            prev.stop();
+            break;
+          case IterateAction.REMOVE:
+            prev.remove();
+            break;
+          case IterateAction.REPLACE:
+            prev.replace( next.replaceWith );
+            break;
+        }
+      });
+
+    }, this);
   }
 
   /**
@@ -1258,34 +1322,70 @@ export class Iterate<T, K, S>
   }
 
   /**
-   * Returns an iterator for the given array.
+   * Returns an iterator for any object which has an entries() iterable.
+   * 
+   * @param hasEntries The object with the entries() iterable.
+   * @param onRemove The function that should handle removing a key/value.
+   * @param onReplace The function that should handle replacing a value.
+   */
+  public static hasEntries<T, K, E extends { entries(): IterableIterator<[K, T]> }> (
+    hasEntries: E, 
+    onRemove?: (entries: E, key: K, value: T) => any, 
+    onReplace?: (entries: E, key: K, value: T, newValue: T) => any): Iterate<T, K, E>
+  {
+    return new Iterate<T, K, E>(iterator =>
+      {
+        const iterable = hasEntries.entries();
+  
+        for (let next = iterable.next(); !next.done; next = iterable.next())
+        {
+          const [key, value] = next.value;
+  
+          switch (iterator.act(value, key))
+          {
+            case IterateAction.STOP:
+              return;
+            case IterateAction.REMOVE:
+              if (onRemove) {
+                onRemove(hasEntries, key, value);
+              }
+              break;
+            case IterateAction.REPLACE:
+              if (onReplace) {
+                onReplace(hasEntries, key, value, iterator.replaceWith);
+              }
+              break;
+          }
+        }
+      });
+  }
+
+  /**
+   * Returns an iterator for the given Map.
    *
-   * @param items The array of items to iterate.
-   * @returns A new iterator for the given array.
+   * @param items The Map of key-value pairs to iterate.
+   * @returns A new iterator for the given Map.
    */
   public static map<T, K> (items: Map<K, T>): Iterate<T, K, Map<K, T>>
   {
-    return new Iterate<T, K, Map<K, T>>(iterator =>
-    {
-      const iterable = items.entries();
+    return Iterate.hasEntries(items, 
+      (map, key) => map.delete(key), 
+      (map, key, value, newValue) => map.set(key, newValue)
+    );
+  }
 
-      for (let next = iterable.next(); !next.done; next = iterable.next())
-      {
-        const [key, value] = next.value;
-
-        switch (iterator.act(value, key))
-        {
-          case IterateAction.STOP:
-            return;
-          case IterateAction.REMOVE:
-            items.delete(key);
-            break;
-          case IterateAction.REPLACE:
-            items.set(key, iterator.replaceWith);
-            break;
-        }
-      }
-    });
+  /**
+   * Returns an iterator for the given Set.
+   *
+   * @param items The Set of items to iterate.
+   * @returns A new iterator for the given Set.
+   */
+  public static set<T> (items: Set<T>): Iterate<T, T, Set<T>>
+  {
+    return Iterate.hasEntries(items,
+      (set, key) => set.delete(key),
+      (set, key, value, newValue) => items.delete(value) && items.add(newValue)
+    );
   }
 
   /**
