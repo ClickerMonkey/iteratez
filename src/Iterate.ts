@@ -52,6 +52,7 @@ import { IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateS
  * - `gte`: that only has items greater than or equal to a value.
  * - `lt`: that only has items less than a value.
  * - `lte`: that only has items less than or equal to a value.
+ * - `sub`: that is this, but allows a function to perform sub operations
  * 
  * The following static functions exist to help iterate simple sources:
  *
