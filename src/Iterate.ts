@@ -63,11 +63,13 @@ import { IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateS
  * 
  * The following static functions exist to help iterate simple sources:
  *
- * - `array`: Iterates an array, optionally reverse.
+ * - `array`: Iterates an array.
  * - `object`: Iterates the properties of an object, optionally just the properties explicitly set on the object.
- * - `empty`: An iterator with no items
- * - `join`: Returns an iterator that iterates over one or more iterators.
+ * - `tree`: Iterates trees.
+ * - `linked`: Iterates linked-lists.
+ * - `empty`: Iterates nothing.
  * - `iterable`: Iterates any collection that implements iterable.
+ * - `join`: Returns an iterator that iterates over one or more iterators.
  *
  * @typeparam T The type of item being iterated.
  */
@@ -1179,6 +1181,90 @@ export class Iterate<T>
   }
 
   /**
+   * Returns a function for iterating over a linked-list. You pass a node to 
+   * the function returned (and whether it should be strict) and an iterator 
+   * will be returned.
+   * 
+   * @param getValue A function which gets a value from a node.
+   * @param getNext A function which returns the next node. When at the end 
+   *    list null or undefined should be returned.
+   * @param remove A function which handles a remove request. If this is not
+   *    specified and a remove is called and `strict` is true an error will be
+   *    thrown.
+   * @param replaceValue A function which applies a value to a node. If this is
+   *    not specified and a replace is called and `strict` is true an error
+   *    will be thrown.
+   */
+  public static linked<N, T = any> (
+    getValue: (node: N) => T,
+    getNext: (node: N) => N | undefined | null,
+    remove?: (node: N, prev: N | undefined | null) => any,
+    replaceValue?: (node: N, value: T) => any)
+  {
+
+    /**
+     * Allows iteration of a linked list starting at a node.
+     * 
+     * If `strict` is true and a remove/replace is requested that can not be
+     * done then an error will be thrown.
+     * 
+     * @param startingNode The node to start traversing at.
+     * @param previousNode The previous node. This is necessary of the 
+     *    starting node is requested to be removed, the user still needs a 
+     *    reference to the first node.
+     * @param strict If an error should be thrown when an unsupported action is
+     *    requested.
+     */
+    return function linkedIterator(startingNode: N, previousNode?: N | null, strict: boolean = true)
+    {
+      return new Iterate<T>(iterator =>
+      {
+        let prev: N | undefined | null = previousNode;
+        let curr: N | undefined | null = startingNode;
+
+        while (curr && curr !== previousNode)
+        {
+          const next = getNext(curr);
+          let removed = false;
+
+          switch (iterator.act(getValue(curr)))
+          {
+            case IterateAction.STOP:
+              return;
+
+            case IterateAction.REMOVE:
+              if (remove) {
+                if (curr === startingNode) {
+                  startingNode = next;
+                }
+                remove(curr, prev);
+                removed = true;
+              } else if (strict) {
+                throw new Error('remove is required for linked list iteration');
+              }
+              break;
+
+            case IterateAction.REPLACE:
+              if (replaceValue) {
+                replaceValue(curr, iterator.replaceWith);
+              } else if (strict) {
+                throw new Error('replace is required for linked list iteration');
+              }
+              break;
+          }
+
+          if (!removed) 
+          {
+            prev = curr; 
+          }
+
+          curr = next;
+        }
+      });
+    };
+  }
+
+  /**
    * Returns a function for iterating over a tree. You pass a node to the 
    * function returned (and whether it should perform a depth-first or 
    * breadth-first traversal) and an iterator will be returned.
@@ -1186,6 +1272,7 @@ export class Iterate<T>
    * @param getValue A function which gets a value from a node.
    * @param getChildren A function which returns an array of child nodes or an 
    *    iterator which can return the children.
+   * @param replaceValue A function which applies a value to a node.
    */
   public static tree<N, T = any> (
     getValue: (node: N) => T, 

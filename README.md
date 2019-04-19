@@ -1,12 +1,14 @@
 # iteratez
 
-A simple yet powerful iterator for simple and complex types. Out of the box you can iterate over arrays, objects, and trees, but you can provide iteration capabilites to your own code no matter how complex the type (dynamically calculated, etc).
+A powerful functional iterator, transformer, and mutator. 
+
+Out of the box you can iterate over arrays, objects, trees, linked-lists, iterables - and you can provide iteration capabilites to your own code no matter how complex the type (dynamically calculated, etc).
 
 The iterator is lazy, so you can chain "views" and iteration is not done until you perform "operations" or "modifiers" to the underlying source.
 
 ### Features
 
-- Array, object, and tree iterators out of the box.
+- Array, object, tree, linked-list, and iterable iterators out of the box.
 - Iteration is lazy, so iteration is only done when it absolutely needs to be.
 - Some "operations" can exit early and cease iteration saving time and resources.
 - When iterating, you can stop at any time.
@@ -34,6 +36,9 @@ let source = Iterate.object({
   name: 'ClickerMonkey',
   age: 30
 });
+let source = Iterate.iterable(...source);
+let source = Iterate.tree( ... )(startingNode);
+let source = Iterate.linked( .... )(startingNode, previousNode);
 let source = yourSource.yourIteratorGenerator();
 
 // ============ ITERATION ============ 

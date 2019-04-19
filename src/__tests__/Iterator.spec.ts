@@ -427,16 +427,66 @@ describe('Iterate', () => {
 
   interface Node<T> {
     value: T;
-    children?: Node<T>[];   
+    next?: Node<T>;
   }
 
-  const treeIterator = Iterate.tree<Node<string>, string>(
+  const linkedIterator = Iterate.linked<Node<string>, string>(
+    (node) => node.value,
+    (node) => node.next,
+    (node, prev) => prev.next = node.next,
+    (node, value) => node.value = value
+  );
+
+  const getLinkedList = (): Node<string> => {
+    return {
+      value: 'HEAD',
+      next: {
+        value: 'a',
+        next: {
+          value: 'b',
+          next: {
+            value: 'c',
+            next: {
+              value: 'd',
+              next: {
+                value: 'e'
+              }
+            }
+          }
+        }
+      }
+    };
+  };
+
+  it('linked', () =>
+  {
+    const list = getLinkedList();
+    const listIterator = linkedIterator(list.next, list);
+    
+    expect( listIterator.list() ).toEqual( ['a', 'b', 'c', 'd', 'e'] );
+    expect( listIterator.where(L => L === 'a' || L === 'd').list() ).toEqual( ['a', 'd'] );
+
+    listIterator.where(L => L === 'a' || L === 'd').erase();
+
+    expect( listIterator.list() ).toEqual( ['b', 'c', 'e'] );
+
+    listIterator.erase();
+
+    expect( listIterator.list() ).toEqual( [] );
+  });
+
+  interface TreeNode<T> {
+    value: T;
+    children?: TreeNode<T>[];   
+  }
+
+  const treeIterator = Iterate.tree<TreeNode<string>, string>(
     node => node.value,
     node => node.children,
     (node, value) => node.value = value
   );
 
-  const getTree = (): Node<string> => {
+  const getTree = (): TreeNode<string> => {
     return {
       value: 'Harry',
       children: [{
