@@ -353,16 +353,16 @@ function getDateIterator ([start, max]: DateRange)
       switch (iter.act(value, key)) 
       {
         // stop all iteration
-        case IterateAction.Stop:
+        case IterateAction.STOP:
           return;
 
         // remove this value, and subsequentally all children from tree
-        case IterateAction.Remove:
+        case IterateAction.REMOVE:
           // doesn't apply here, this is a dynamic set
           break;
 
         // replace the value
-        case IterateAction.Replace:
+        case IterateAction.REPLACE:
           // doesn't apply here, this is a dynamic set
           break;
       }
