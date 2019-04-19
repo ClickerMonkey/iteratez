@@ -1,5 +1,6 @@
 import { IterateAction } from "./IterateAction";
 import { IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateSource } from "./types";
+import { getNumberComparator, getStringComparator, getDateComparator, getDateEquality } from './functions';
 
 
 /**
@@ -64,6 +65,7 @@ import { IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateS
  * - `lte`: that only has items less than or equal to a value.
  * - `sub`: that is this, but allows a function to perform sub operations
  * - `split`: Splits the items into two iterators (pass/fail) based on a condition.
+ * - `unzip`: Splits the view into two iterates (keys/values).
  * 
  * The following functions are used to control comparison logic
  * 
@@ -87,6 +89,7 @@ import { IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateS
  * - `iterable`: Iterates any collection that implements iterable.
  * - `join`: Returns an iterator that iterates over one or more iterators.
  * - `entries`: Iterates an array of `[key, value]` entries.
+ * - `zip`: Combines a key iterator and value iterator into one.
  *
  * @typeparam T The type of item being iterated.
  */
@@ -281,12 +284,7 @@ export class Iterate<T, K, S>
    */
   public numbers (ascending: boolean = true, nullsFirst: boolean = false): this
   {
-    const isType = (x: any) => typeof x === 'number' && isFinite(x);
-    const comparator: IterateCompare<number, K> = (a, b) => a - b;
-
-    return this.withLogic<number>(
-      (a, b) => Iterate.compare<number, K>(ascending, nullsFirst, a, b, isType, comparator)
-    );
+    return this.withLogic(getNumberComparator(ascending, nullsFirst));
   }
 
   /**
@@ -299,14 +297,7 @@ export class Iterate<T, K, S>
    */
   public strings (sensitive: boolean = true, ascending: boolean = true, nullsFirst: boolean = false): this
   {
-    const isType = (x: any) => typeof x === 'string';
-    const comparator: IterateCompare<string, K> = sensitive
-      ? (a, b) => a.localeCompare(b)
-      : (a, b) => a.toLowerCase().localeCompare(b.toLowerCase())
-
-    return this.withLogic<string>(
-      (a, b) => Iterate.compare<string, K>(ascending, nullsFirst, a, b, isType, comparator)
-    );
+    return this.withLogic(getStringComparator(sensitive, ascending, nullsFirst));
   }
 
   /**
@@ -326,19 +317,7 @@ export class Iterate<T, K, S>
    */
   public dates (equalityTimespan: number = 1, utc: boolean = true, ascending: boolean = true, nullsFirst: boolean = false): this
   {
-    const MILLIS_IN_MINUTE = 60000;
-
-    const isType = (x: any) => x instanceof Date;
-    const comparator: IterateCompare<Date, K> = (a, b) => a.getTime() - b.getTime();
-    const getTime = utc
-      ? (a: Date) => a.getTime()
-      : (a: Date) => a.getTime() + a.getTimezoneOffset() * MILLIS_IN_MINUTE;
-    const equality: IterateEquals<Date, K> = (a, b) => (getTime(a) % equalityTimespan) === (getTime(b) % equalityTimespan);
-
-    return this.withLogic(
-      (a, b) => Iterate.compare<Date, K>(ascending, nullsFirst, a, b, isType, comparator),
-      (a, b) => Iterate.equals<Date, K>(a, b, isType, equality)
-    );
+    return this.withLogic(getDateComparator(ascending, nullsFirst), getDateEquality(equalityTimespan, utc));
   }
 
   /**
@@ -664,6 +643,32 @@ export class Iterate<T, K, S>
     }
 
     return { pass, fail };
+  }
+
+  /**
+   * Unzips the view into a keys and values views.
+   * 
+   * You can pass a function as a second argument which recieves two iterators
+   * for keys and values respectively. This will be returned in that scenario.
+   * 
+   * If you don't pass a second function an object will be returned with two
+   * properties: keys and values.
+   */
+  public unzip (): { keys: Iterate<K, number, S>, values: Iterate<T, number, S> };
+  public unzip (handle: (keys: Iterate<K, number, S>, values: Iterate<T, number, S>) => any): this
+  public unzip (handle?: (keys: Iterate<K, number, S>, values: Iterate<T, number, S>) => any): any
+  {
+    const keys = this.keys();
+    const values = this.values();
+    
+    if (handle)
+    {
+      handle(keys, values);
+
+      return this;
+    }
+
+    return { keys, values };
   }
 
   /**
@@ -1322,6 +1327,76 @@ export class Iterate<T, K, S>
   }
 
   /**
+   * Returns an iterator for the keys and values specified. If the key and 
+   * value iterators don't have the same number of items, the returned iterator
+   * will have the maximum pairs possible (which is the lesser of the number
+   * of keys and values).
+   * 
+   * If the returned iterator is mutated the given keys and values iterators 
+   * will be mutated as well. If you want to avoid that, pass in readonly 
+   * key/value iterators.
+   * 
+   * @param keys The iterator to obtain the keys from.
+   * @param values The iterator to obtain the values from.
+   */
+  public static zip<T, K> (keys: Iterate<K, any, any>, values: Iterate<T, any, any>): Iterate<T, K, any>
+  public static zip<T, K> (keys: Iterate<K, number, any>, values: Iterate<T, number, any>): Iterate<T, K, any>
+  public static zip<T, K, S = any> (keys: Iterate<K, number, S>, values: Iterate<T, number, S>): Iterate<T, K, S>
+  {
+    return new Iterate<T, K, S>(next =>
+    {
+      const keysArray = keys.array();
+      const removeKeyAt: number[] = [];
+      let valuesIndex = 0;
+
+      values.iterate((value, ignoreKey, prev) =>
+      {
+        if (valuesIndex >= keysArray.length)
+        {
+          prev.stop();
+        }
+        else
+        {
+          switch (next.act(value, keysArray[valuesIndex]))
+          {
+            case IterateAction.STOP:
+              return;
+            case IterateAction.REMOVE:
+              prev.remove();
+              removeKeyAt.push(valuesIndex);
+              break;
+            case IterateAction.REPLACE:
+              prev.replace(next.replaceWith);
+              break;
+          }
+        }
+        
+        valuesIndex++;
+      });
+
+      if (removeKeyAt.length > 0)
+      {
+        let keysIndex = 0;
+
+        keys.iterate((key, ignoreKey, prev) =>
+        {
+          if (keysIndex === removeKeyAt[0])
+          {
+            prev.remove();
+            removeKeyAt.shift();
+          }
+          else if (removeKeyAt.length === 0)
+          {
+            prev.stop();
+          }
+
+          keysIndex++;
+        });
+      }
+    });
+  }
+
+  /**
    * Returns an iterator for any object which has an entries() iterable.
    * 
    * @param hasEntries The object with the entries() iterable.
@@ -1334,30 +1409,30 @@ export class Iterate<T, K, S>
     onReplace?: (entries: E, key: K, value: T, newValue: T) => any): Iterate<T, K, E>
   {
     return new Iterate<T, K, E>(iterator =>
+    {
+      const iterable = hasEntries.entries();
+
+      for (let next = iterable.next(); !next.done; next = iterable.next())
       {
-        const iterable = hasEntries.entries();
-  
-        for (let next = iterable.next(); !next.done; next = iterable.next())
+        const [key, value] = next.value;
+
+        switch (iterator.act(value, key))
         {
-          const [key, value] = next.value;
-  
-          switch (iterator.act(value, key))
-          {
-            case IterateAction.STOP:
-              return;
-            case IterateAction.REMOVE:
-              if (onRemove) {
-                onRemove(hasEntries, key, value);
-              }
-              break;
-            case IterateAction.REPLACE:
-              if (onReplace) {
-                onReplace(hasEntries, key, value, iterator.replaceWith);
-              }
-              break;
-          }
+          case IterateAction.STOP:
+            return;
+          case IterateAction.REMOVE:
+            if (onRemove) {
+              onRemove(hasEntries, key, value);
+            }
+            break;
+          case IterateAction.REPLACE:
+            if (onReplace) {
+              onReplace(hasEntries, key, value, iterator.replaceWith);
+            }
+            break;
         }
-      });
+      }
+    });
   }
 
   /**
@@ -1710,71 +1785,6 @@ export class Iterate<T, K, S>
   public static empty<T, K, S> (): Iterate<T, K, S>
   {
     return new Iterate<T, K, S>(parent => { return; });
-  }
-
-  /**
-   * A helper comparison function for two unknown variables. If they both 
-   * aren't the correct type the are considered equal. If one doesn't have the
-   * correct type then the `nullsFirst` variable is used to determine which
-   * value goes first. If both variables are valid the the given `compare`
-   * function is used taking into account the `ascending` order option.
-   * 
-   * @param ascending If valid values should be in ascending order (default).
-   * @param nullsFirst If invalid values should be ordered first.
-   * @param a The first value.
-   * @param b The second value.
-   * @param correctType Verifies whether a value is valid.
-   * @param compare Compares two valid values.
-   */
-  public static compare<T, K> (ascending: boolean, nullsFirst: boolean, a: any, b: any, correctType: (x: any) => any, compare: IterateCompare<T, K>): number
-  {
-    const typeA = !correctType(a);
-    const typeB = !correctType(b);
-
-    if (typeA !== typeB) 
-    {
-      // One is invalid
-      return (nullsFirst ? typeA : typeB) ? -1 : 1;
-    } 
-    else if (typeA) 
-    {
-      // Both are invalid
-      return 0;
-    }
-
-    // Neither are invalid
-    return ascending ? compare(a, b) : compare(b, a);
-  }
-
-  /**
-   * A helper equals function for two unknown variables. If they both aren't 
-   * the correct type they are considered equal. If one doesn't have the 
-   * correct type they are considered unequal. If they both are valid then
-   * the given equality logic is used.
-   * 
-   * @param a The first value.
-   * @param b The second value.
-   * @param correctType Verifies whether a value is valid.
-   * @param equals Compares two valid values for equality.
-   */
-  public static equals<T, K> (a: any, b: any, correctType: (x: any) => any, equals: IterateEquals<T, K>): boolean
-  {
-    const typeA = !correctType(a);
-    const typeB = !correctType(b);
-
-    if (typeA !== typeB) 
-    {
-      // One is invalid
-      return false;
-    } 
-    else if (typeA) 
-    {
-      // Both are invalid
-      return true;
-    }
-
-    // Neither are invalid
-    return equals(a, b);
   }
 
 }

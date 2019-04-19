@@ -367,9 +367,9 @@ describe('Iterate', () => {
     const b: number[] = [];
     const c: number[] = [];
 
-    a.split(x => x % 2 === 0, (pass, fail) => {
-      pass.array(b);
-      fail.array(c);
+    a.split(x => x % 2 === 0, (p, f) => {
+      p.array(b);
+      f.array(c);
     });
 
     expect( b ).toEqual( [2, 4, 6, 8] );
@@ -379,6 +379,61 @@ describe('Iterate', () => {
 
     expect( pass.array() ).toEqual( [2, 4, 6, 8] );
     expect( fail.array() ).toEqual( [1, 3, 5, 7] );
+  });
+
+  it('unzip', () =>
+  {
+    const a = Iterate.object({
+      a: 1,
+      b: 2,
+      c: 3,
+      d: 4
+    });
+    const b: string[] = [];
+    const c: number[] = [];
+
+    a.unzip((k, v) => k.array(b) && v.array(c));
+
+    expect( b ).toEqual( ['a', 'b', 'c', 'd'] );
+    expect( c ).toEqual( [1, 2, 3, 4] );
+
+    const { keys, values } = a.unzip();
+
+    expect( keys.array() ).toEqual( ['a', 'b', 'c', 'd'] );
+    expect( values.array() ).toEqual( [1, 2, 3, 4] );
+
+    a.unzip((k, v) => {
+      k.where(x => x === 'b').delete();
+      v.where(x => x === 3).delete();
+    });
+
+    expect( a.entries() ).toEqual( [['a', 1], ['d', 4]] );
+  });
+
+  it('zip', () =>
+  {
+    const zip1 = Iterate.zip(Iterate.array([1, 2, 3]), Iterate.array(['a', 'b', 'c']));
+
+    expect( zip1.entries() ).toEqual( [[1, 'a'], [2, 'b'], [3, 'c']] );
+
+    const zip2 = Iterate.zip(Iterate.array([1, 2, 3]), Iterate.array(['a', 'b']));
+
+    expect( zip2.entries() ).toEqual( [[1, 'a'], [2, 'b']] );
+
+    const zip3 = Iterate.zip(Iterate.array([1, 2]), Iterate.array(['a', 'b', 'c']));
+
+    expect( zip3.entries() ).toEqual( [[1, 'a'], [2, 'b']] );
+
+    const keys = Iterate.array([1, 2, 3, 4, 5, 6]);
+    const vals = Iterate.array(['a', 'b', 'c', 'd', 'e', 'f']);
+    const zipped = Iterate.zip(keys, vals);
+
+    zipped.where((value, key) => key % 2 === 0).delete();
+
+    expect( keys.array() ).toEqual( [1, 3, 5] ) ;
+    expect( vals.array() ).toEqual( ['a', 'c', 'e'] );
+
+    expect( zipped.entries() ).toEqual( [[1, 'a'], [3, 'c'], [5, 'e']] );
   });
 
   it('array', () => 
