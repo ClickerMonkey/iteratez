@@ -37,8 +37,9 @@ let source = Iterate.object({
   age: 30
 });
 let source = Iterate.iterable(...source);
+let source = Iterate.tuples( ... );
 let source = Iterate.tree( ... )(startingNode);
-let source = Iterate.linked( .... )(startingNode, previousNode);
+let source = Iterate.linked( ... )(startingNode, previousNode);
 let source = yourSource.yourIteratorGenerator();
 
 // ============ ITERATION ============ 
@@ -83,6 +84,7 @@ let count = source.count(); // number
 let array = source.array(); // T[]
 let groups = source.group(item => item.age); // { [age]: T[] }
 let set = source.set(); // Set<T>
+let tuples = source.tuples(): // Array<[K, T]>
 let sameArray = source.array(existingArray); // T[]
 let personById = source.object(item => item.id); // { [item.id]: item }
 let sameObject = source.object(item => item.id, existingObject);

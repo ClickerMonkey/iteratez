@@ -10,7 +10,7 @@ import { Iterate } from './Iterate';
  * @param iterator The iterator with the item.
  * @returns The result of the callback.
  */
-export type IterateCallback<T, R> = (item: T, iterator: Iterate<T>) => R;
+export type IterateCallback<T, K, S, R> = (item: T, key: K, iterator: Iterate<T, K, S>) => R;
 
 /**
  * An [[Iterate]] source which handles iterating over items and calls
@@ -19,7 +19,7 @@ export type IterateCallback<T, R> = (item: T, iterator: Iterate<T>) => R;
  * @param callback The function to invoke for each item.
  * @param iterator The iterator to check for early exists.
  */
-export type IterateSource<T> = (iterator: Iterate<T>) => any;
+export type IterateSource<T, K, S> = (iterator: Iterate<T, K, S>) => any;
 
 /**
  * A where to apply duration iteration to only look at certain items when this
@@ -28,7 +28,7 @@ export type IterateSource<T> = (iterator: Iterate<T>) => any;
  * @param item The item being iterated.
  * @returns `true` if the item should be iterated, otherwise `false`.
  */
-export type IterateFilter<T> = (item: T) => any;
+export type IterateFilter<T, K> = (item: T, key?: K) => any;
 
 /**
  * Tests two items for equality.
@@ -37,7 +37,7 @@ export type IterateFilter<T> = (item: T) => any;
  * @param b The second item.
  * @returns `true` if the items are considered equal.
  */
-export type IterateEquals<T> = (a: T, b: T) => boolean;
+export type IterateEquals<T, K> = (a: T, b: T, aKey?: K, bKey?: K) => boolean;
 
 /**
  * Compares two items.
@@ -49,4 +49,4 @@ export type IterateEquals<T> = (a: T, b: T) => boolean;
  * @param b The second item.
  * @returns A number representing which item is greater.
  */
-export type IterateCompare<T> = (a: T, b: T) => number;
+export type IterateCompare<T, K> = (a: T, b: T, aKey?: K, bKey?: K) => number;

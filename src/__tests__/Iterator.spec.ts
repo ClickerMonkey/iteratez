@@ -10,7 +10,7 @@ describe('Iterate', () => {
     const a: number[] = [1, 2, 3, 4];
 
     Iterate.array( a )
-      .iterate((n, iterator) => {
+      .iterate((n, k, iterator) => {
         if (n % 2 === 0) {
           iterator.remove();
         }
@@ -552,7 +552,7 @@ describe('Iterate', () => {
     expect(list).toEqual(['Harry', 'Michael', 'Donald', 'Robert', 'Philip', 'Joseph', 'Katlyn', 'Alyssa', 'Mackenzie', 'Mason', 'Miles']);
   });
 
-  it('tree purge', () =>
+  it('tree delete', () =>
   {
     const tree = getTree();
     
@@ -567,7 +567,7 @@ describe('Iterate', () => {
   {
     const tree = getTree();
 
-    treeIterator(tree).iterate((name, iter) => iter.replace(name.toLowerCase()));
+    treeIterator(tree).iterate((name, key, iter) => iter.replace(name.toLowerCase()));
 
     const list = treeIterator(tree).array();
 

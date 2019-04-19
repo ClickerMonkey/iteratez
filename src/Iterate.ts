@@ -24,6 +24,7 @@ import { IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateS
  * - `array`: Builds an array of the items in the view.
  * - `set`: Builds a Set of the items in the view.
  * - `object`: Builds an object of the items in the view.
+ * - `tuples`: Builds an array of `[key, value]` in the view.
  * - `group`: Builds an object of item arrays grouped by a value derived from each item.
  * - `reduce`: Reduces the items in the view down to a single value.
  * - `min`: Returns the minimum item in the view.
@@ -79,21 +80,22 @@ import { IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateS
  * - `empty`: Iterates nothing.
  * - `iterable`: Iterates any collection that implements iterable.
  * - `join`: Returns an iterator that iterates over one or more iterators.
+ * - `tuples`: Iterates an array of `[key, value]` tuples.
  *
  * @typeparam T The type of item being iterated.
  */
-export class Iterate<T>
+export class Iterate<T, K, S>
 {
 
   /**
    * An equality check by reference.
    */
-  public static EQUALS_STRICT: IterateEquals<unknown> = (a, b) => a === b;
+  public static EQUALS_STRICT: IterateEquals<any, any> = (a, b) => a === b;
 
   /**
    * An equality check by value.
    */ // tslint:disable-next-line: triple-equals
-  public static EQUALS_LOOSE: IterateEquals<unknown> = (a, b) => a == b;
+  public static EQUALS_LOOSE: IterateEquals<any, any> = (a, b) => a == b;
 
   /**
    * A result of the iteration passed to [[Iterate.stop]].
@@ -113,7 +115,7 @@ export class Iterate<T>
   /**
    * The current callback passed to the iterator.
    */
-  public callback: IterateCallback<T, any>;
+  public callback: IterateCallback<T, K, S, any>;
 
   /**
    * The source of iterable items. This allows the iteration over any type of
@@ -121,24 +123,24 @@ export class Iterate<T>
    * recommended that the source checks the [[Iterate.iterating]] flag after
    * each callback invokation.
    */
-  private source: IterateSource<T>;
+  private source: IterateSource<T, K, S>;
 
   /**
    * The equality checker to use for this iterator and subsequent views.
    */
-  private equality: IterateEquals<T>;
+  private equality: IterateEquals<T, K>;
 
   /**
    * The comparator to use for this iterator and subsequent views.
    */
-  private comparator: IterateCompare<T>;
+  private comparator: IterateCompare<T, K>;
 
   /**
    * Creates a new Iterate given a source.
    *
    * @param source The source of items to iterator.
    */
-  public constructor (source: IterateSource<T>, parent?: Iterate<T>)
+  public constructor (source: IterateSource<T, K, S>, parent?: Iterate<T, K, S>)
   {
     this.source = source;
 
@@ -154,9 +156,9 @@ export class Iterate<T>
    * if you want to iterate all or a portion of the source while already
    * iterating it (like a nested loop).
    */
-  public clone (): Iterate<T>
+  public clone (): Iterate<T, K, S>
   {
-    return new Iterate<T>( this.source, this );
+    return new Iterate<T, K, S>( this.source, this );
   }
 
   /**
@@ -165,12 +167,12 @@ export class Iterate<T>
    *
    * @param item The current item being iterated.
    */
-  public act (item: T): IterateAction
+  public act (item: T, key: K): IterateAction
   {
     this.action = IterateAction.CONTINUE;
     this.replaceWith = null;
 
-    this.callback( item, this );
+    this.callback( item, key, this );
 
     return this.action;
   }
@@ -224,7 +226,7 @@ export class Iterate<T>
    * 
    * @param equality A function to compare two values for equality.
    */
-  public withEquality (equality: IterateEquals<T>): this
+  public withEquality (equality: IterateEquals<T, K>): this
   {
     this.equality = equality;
 
@@ -238,7 +240,7 @@ export class Iterate<T>
    * 
    * @param comparator A function which compares tow values.
    */
-  public withComparator (comparator: IterateCompare<T>): this
+  public withComparator (comparator: IterateCompare<T, K>): this
   {
     this.comparator = comparator;
 
@@ -256,10 +258,10 @@ export class Iterate<T>
    * @param comparator The comparison logic.
    * @param equality The equality logic if the comparison logic won't suffice.
    */
-  private withLogic<A> (comparator: IterateCompare<A>, equality?: IterateEquals<A>): this
+  private withLogic<A> (comparator: IterateCompare<A, K>, equality?: IterateEquals<A, K>): this
   {
-    this.comparator = comparator as unknown as IterateCompare<T>;
-    this.equality = (equality || ((a: A, b: A) => comparator(a, b) === 0)) as unknown as IterateEquals<T>;
+    this.comparator = comparator as unknown as IterateCompare<T, K>;
+    this.equality = (equality || ((a: A, b: A, aKey: K, bKey: K) => comparator(a, b, aKey, bKey) === 0)) as unknown as IterateEquals<T, K>;
 
     return this;
   }
@@ -274,10 +276,10 @@ export class Iterate<T>
   public numbers (ascending: boolean = true, nullsFirst: boolean = false): this
   {
     const isType = (x: any) => typeof x === 'number' && isFinite(x);
-    const comparator: IterateCompare<number> = (a, b) => a - b;
+    const comparator: IterateCompare<number, K> = (a, b) => a - b;
 
     return this.withLogic<number>(
-      (a, b) => Iterate.compare<number>(ascending, nullsFirst, a, b, isType, comparator)
+      (a, b) => Iterate.compare<number, K>(ascending, nullsFirst, a, b, isType, comparator)
     );
   }
 
@@ -292,12 +294,12 @@ export class Iterate<T>
   public strings (sensitive: boolean = true, ascending: boolean = true, nullsFirst: boolean = false): this
   {
     const isType = (x: any) => typeof x === 'string';
-    const comparator: IterateCompare<string> = sensitive
+    const comparator: IterateCompare<string, K> = sensitive
       ? (a, b) => a.localeCompare(b)
       : (a, b) => a.toLowerCase().localeCompare(b.toLowerCase())
 
     return this.withLogic<string>(
-      (a, b) => Iterate.compare<string>(ascending, nullsFirst, a, b, isType, comparator)
+      (a, b) => Iterate.compare<string, K>(ascending, nullsFirst, a, b, isType, comparator)
     );
   }
 
@@ -321,15 +323,15 @@ export class Iterate<T>
     const MILLIS_IN_MINUTE = 60000;
 
     const isType = (x: any) => x instanceof Date;
-    const comparator: IterateCompare<Date> = (a, b) => a.getTime() - b.getTime();
+    const comparator: IterateCompare<Date, K> = (a, b) => a.getTime() - b.getTime();
     const getTime = utc
       ? (a: Date) => a.getTime()
       : (a: Date) => a.getTime() + a.getTimezoneOffset() * MILLIS_IN_MINUTE;
-    const equality: IterateEquals<Date> = (a, b) => (getTime(a) % equalityTimespan) === (getTime(b) % equalityTimespan);
+    const equality: IterateEquals<Date, K> = (a, b) => (getTime(a) % equalityTimespan) === (getTime(b) % equalityTimespan);
 
     return this.withLogic(
-      (a, b) => Iterate.compare<Date>(ascending, nullsFirst, a, b, isType, comparator),
-      (a, b) => Iterate.equals<Date>(a, b, isType, equality)
+      (a, b) => Iterate.compare<Date, K>(ascending, nullsFirst, a, b, isType, comparator),
+      (a, b) => Iterate.equals<Date, K>(a, b, isType, equality)
     );
   }
 
@@ -339,11 +341,11 @@ export class Iterate<T>
    * 
    * @param comparator An override for any existing comparison logic.
    */
-  public desc (comparator?: IterateCompare<T>): this
+  public desc (comparator?: IterateCompare<T, K>): this
   {
     const compare = comparator || this.comparator;
 
-    this.comparator = (a, b) => compare(b, a);
+    this.comparator = (a, b, aKey, bKey) => compare(b, a, bKey, aKey);
 
     return this;
   }
@@ -354,7 +356,7 @@ export class Iterate<T>
    * 
    * @param equalityOverride Equality logic to use if provided.
    */
-  public getEquality (equalityOverride?: IterateEquals<T>): IterateEquals<T>
+  public getEquality (equalityOverride?: IterateEquals<T, K>): IterateEquals<T, K>
   {
     return equalityOverride || this.equality || Iterate.EQUALS_STRICT;
   }
@@ -365,7 +367,7 @@ export class Iterate<T>
    * 
    * @param comparatorOverride Comparison logic to use if provided.
    */
-  public getComparator (comparatorOverride?: IterateCompare<T>): IterateCompare<T>
+  public getComparator (comparatorOverride?: IterateCompare<T, K>): IterateCompare<T, K>
   {
     const chosen = comparatorOverride || this.comparator;
 
@@ -384,7 +386,7 @@ export class Iterate<T>
    */
   public empty (): boolean
   {
-    return !this.iterate((item, iterator) => iterator.stop()).isStopped();
+    return !this.iterate((item, key, iterator) => iterator.stop()).isStopped();
   }
 
   /**
@@ -394,7 +396,7 @@ export class Iterate<T>
    */
   public has (): boolean
   {
-    return this.iterate((item, iterator) => iterator.stop()).isStopped();
+    return this.iterate((item, key, iterator) => iterator.stop()).isStopped();
   }
 
   /**
@@ -403,9 +405,9 @@ export class Iterate<T>
    * @param value The value to search for.
    * @param equality An override for any existing equality logic.
    */
-  public contains (value: T, equality?: IterateEquals<T>): boolean
+  public contains (value: T, equality?: IterateEquals<T, K>): boolean
   {
-    return this.where(other => this.getEquality(equality)(value, other)).has();
+    return this.where((other, otherKey) => this.getEquality(equality)(value, other, undefined, otherKey)).has();
   }
 
   /**
@@ -417,7 +419,7 @@ export class Iterate<T>
   {
     let total: number = 0;
 
-    this.iterate((item, iterator) => total++);
+    this.iterate(() => total++);
 
     return total;
   }
@@ -429,7 +431,7 @@ export class Iterate<T>
    */
   public first (): T
   {
-    return this.iterate((item, iterator) => iterator.stop(item)).result;
+    return this.iterate((item, key, iterator) => iterator.stop(item)).result;
   }
 
   /**
@@ -441,7 +443,7 @@ export class Iterate<T>
   {
     let last: T = null;
 
-    this.iterate((item, iterator) => last = item);
+    this.iterate(item => last = item);
 
     return last;
   }
@@ -455,6 +457,19 @@ export class Iterate<T>
   public array (out: T[] = []): T[]
   {
     this.iterate(item => out.push( item ));
+
+    return out;
+  }
+
+  /**
+   * An operation that builds an array of [key, item] tuples from this view.
+   *
+   * @param out The array to place the tuples in.
+   * @returns The reference to `out` which has had tuples added to it.
+   */
+  public tuples (out: Array<[K, T]> = []): Array<[K, T]>
+  {
+    this.iterate((item, itemKey) => out.push([itemKey, item]));
 
     return out;
   }
@@ -539,7 +554,7 @@ export class Iterate<T>
    * 
    * @param comparator An override for any existing comparison logic.
    */
-  public min (comparator?: IterateCompare<T>): T
+  public min (comparator?: IterateCompare<T, K>): T
   {
     const compare = this.getComparator(comparator);
 
@@ -552,7 +567,7 @@ export class Iterate<T>
    * 
    * @param comparator An override for any existing comparison logic.
    */
-  public max (comparator?: IterateCompare<T>): T
+  public max (comparator?: IterateCompare<T, K>): T
   {
     const compare = this.getComparator(comparator);
 
@@ -564,20 +579,20 @@ export class Iterate<T>
    */
   public delete (): this
   {
-    return this.iterate((item, iterator) => iterator.remove());
+    return this.iterate((item, key, iterator) => iterator.remove());
   }
 
   /**
    * A mutation which removes items in this iterator from the source and 
    * returns a new iterator with the removed items.
    */
-  public extract (): Iterate<T>
+  public extract (): Iterate<T, K, Array<[K, T]>>
   {
-    const extracted: T[] = [];
+    const extracted: Array<[K, T]> = [];
 
-    this.iterate((item, iterator) => extracted.push(item) && iterator.remove());
+    this.iterate((item, key, iterator) => extracted.push([key, item]) && iterator.remove());
 
-    return Iterate.array(extracted);
+    return Iterate.tuples(extracted);
   }
 
   /**
@@ -587,7 +602,7 @@ export class Iterate<T>
    */
   public overwrite (replacement: T): this
   {
-    return this.iterate((item, iterator) => iterator.replace(replacement));
+    return this.iterate((item, key, iterator) => iterator.replace(replacement));
   }
 
   /**
@@ -615,9 +630,9 @@ export class Iterate<T>
    * If you don't pass a second function an object will be returned with two
    * properties: pass and fail.
    */
-  public split (pass: IterateFilter<T>): { pass: Iterate<T>, fail: Iterate<T> };
-  public split (pass: IterateFilter<T>, handle: (pass: Iterate<T>, fail: Iterate<T>) => any): this
-  public split (by: IterateFilter<T>, handle?: (pass: Iterate<T>, fail: Iterate<T>) => any): any
+  public split (pass: IterateFilter<T, K>): { pass: Iterate<T, K, S>, fail: Iterate<T, K, S> };
+  public split (pass: IterateFilter<T, K>, handle: (pass: Iterate<T, K, S>, fail: Iterate<T, K, S>) => any): this
+  public split (by: IterateFilter<T, K>, handle?: (pass: Iterate<T, K, S>, fail: Iterate<T, K, S>) => any): any
   {
     const pass = this.where(by);
     const fail = this.not(by);
@@ -642,19 +657,19 @@ export class Iterate<T>
    */
   public view<D>(
     getData: () => D, 
-    shouldAct: (data: D, item: T) => any, 
-    afterAct?: (data: D, item: T, iter: Iterate<T>) => void, 
-    afterSkip?: (data: D, item: T, iter: Iterate<T>) => void): Iterate<T>
+    shouldAct: (data: D, item: T, key: K) => any, 
+    afterAct?: (data: D, item: T, key: K, iter: Iterate<T, K, S>) => void, 
+    afterSkip?: (data: D, item: T, key: K, iter: Iterate<T, K, S>) => void): Iterate<T, K, S>
   {
-    return new Iterate<T>(next =>
+    return new Iterate<T, K, S>(next =>
     {
       const data = getData();
 
-      this.iterate((item, prev) =>
+      this.iterate((item, itemKey, prev) =>
       {
-        if (shouldAct(data, item))
+        if (shouldAct(data, item, itemKey))
         {
-          switch (next.act( item ))
+          switch (next.act( item, itemKey ))
           {
             case IterateAction.STOP:
               prev.stop();
@@ -669,12 +684,12 @@ export class Iterate<T>
 
           if (afterAct)
           {
-            afterAct(data, item, prev);
+            afterAct(data, item, itemKey, prev);
           }
         }
         else if (afterSkip)
         {
-          afterSkip(data, item, prev);
+          afterSkip(data, item, itemKey, prev);
         }
       });
 
@@ -686,7 +701,7 @@ export class Iterate<T>
    *
    * @param amount The maximum number of items to return.
    */
-  public take (amount: number): Iterate<T>
+  public take (amount: number): Iterate<T, K, S>
   {
     if (amount <= 0)
     {
@@ -697,7 +712,7 @@ export class Iterate<T>
       () => ({ amount }),
       (data) => data.amount > 0,
       (data) => data.amount--,
-      (data, item, iter) => iter.stop()
+      (data, item, itemKey, iter) => iter.stop()
     );
   }
 
@@ -707,7 +722,7 @@ export class Iterate<T>
    *
    * @param amount The number of items to skip.
    */
-  public skip (amount: number): Iterate<T>
+  public skip (amount: number): Iterate<T, K, S>
   {
     return this.view<{ skipped: number }>(
       () => ({ skipped: 0 }),
@@ -723,7 +738,7 @@ export class Iterate<T>
    *
    * @param amount The number of items to drop from the end.
    */
-  public drop (amount: number): Iterate<T>
+  public drop (amount: number): Iterate<T, K, S>
   {
     return this.reverse().skip(amount).reverse();
   }
@@ -734,9 +749,11 @@ export class Iterate<T>
    *
    * @param iterators The iterators to append after this one.
    */
-  public append (...iterators: Iterate<T>[]): Iterate<T>
+  public append (...iterators: Iterate<T, any, any>[]): Iterate<T, any, any>
+  public append (...iterators: Iterate<T, K, any>[]): Iterate<T, K, any>
+  public append (...iterators: Iterate<T, K, S>[]): Iterate<T, K, S>
   {
-    return Iterate.join<T>( this, ...iterators );
+    return Iterate.join<T, K>( this, ...iterators );
   }
 
   /**
@@ -745,9 +762,11 @@ export class Iterate<T>
    *
    * @param iterators The iterators to prepend before this one.
    */
-  public prepend (...iterators: Iterate<T>[]): Iterate<T>
+  public prepend (...iterators: Iterate<T, any, any>[]): Iterate<T, any, any>
+  public prepend (...iterators: Iterate<T, K, any>[]): Iterate<T, K, any>
+  public prepend (...iterators: Iterate<T, K, S>[]): Iterate<T, K, S>
   {
-    return Iterate.join<T>( ...iterators, this );
+    return Iterate.join<T, K>( ...iterators, this );
   }
 
   /**
@@ -755,11 +774,11 @@ export class Iterate<T>
    *
    * @param where The function which determines if an item should be iterated.
    */
-  public where (where: IterateFilter<T>): Iterate<T>
+  public where (where: IterateFilter<T, K>): Iterate<T, K, S>
   {
     return this.view<null>(
       () => null,
-      (data, item) => where(item)
+      (data, item, itemKey) => where(item, itemKey)
     );
   }
 
@@ -768,11 +787,11 @@ export class Iterate<T>
    * 
    * @param not The function which determines if an item should be iterated.
    */
-  public not (not: IterateFilter<T>): Iterate<T>
+  public not (not: IterateFilter<T, K>): Iterate<T, K, S>
   {
     return this.view<null>(
       () => null,
-      (data, item) => !not(item)
+      (data, item, itemKey) => !not(item, itemKey)
     );
   }
 
@@ -783,11 +802,11 @@ export class Iterate<T>
    * @param value The value to compare against.
    * @param comparator An override for any existing comparison logic.
    */
-  public gt (value: T, comparator?: IterateCompare<T>): Iterate<T>
+  public gt (value: T, comparator?: IterateCompare<T, K>): Iterate<T, K, S>
   {
-    return this.view<IterateCompare<T>>(
+    return this.view<IterateCompare<T, K>>(
       () => this.getComparator(comparator),
-      (compare, item) => compare(item, value) > 0
+      (compare, item, itemKey) => compare(item, value, itemKey) > 0
     );
   }
 
@@ -798,11 +817,11 @@ export class Iterate<T>
    * @param value The value to compare against.
    * @param comparator An override for any existing comparison logic.
    */
-  public gte (value: T, comparator?: IterateCompare<T>): Iterate<T>
+  public gte (value: T, comparator?: IterateCompare<T, K>): Iterate<T, K, S>
   {
-    return this.view<IterateCompare<T>>(
+    return this.view<IterateCompare<T, K>>(
       () => this.getComparator(comparator),
-      (compare, item) => compare(item, value) >= 0
+      (compare, item, itemKey) => compare(item, value, itemKey) >= 0
     );
   }
 
@@ -813,11 +832,11 @@ export class Iterate<T>
    * @param value The value to compare against.
    * @param comparator An override for any existing comparison logic.
    */
-  public lt (value: T, comparator?: IterateCompare<T>): Iterate<T>
+  public lt (value: T, comparator?: IterateCompare<T, K>): Iterate<T, K, S>
   {
-    return this.view<IterateCompare<T>>(
+    return this.view<IterateCompare<T, K>>(
       () => this.getComparator(comparator),
-      (compare, item) => compare(item, value) < 0
+      (compare, item, itemKey) => compare(item, value, itemKey) < 0
     );
   }
 
@@ -828,11 +847,11 @@ export class Iterate<T>
    * @param value The value to compare against.
    * @param comparator An override for any existing comparison logic.
    */
-  public lte (value: T, comparator?: IterateCompare<T>): Iterate<T>
+  public lte (value: T, comparator?: IterateCompare<T, K>): Iterate<T, K, S>
   {
-    return this.view<IterateCompare<T>>(
+    return this.view<IterateCompare<T, K>>(
       () => this.getComparator(comparator),
-      (compare, item) => compare(item, value) <= 0
+      (compare, item, itemKey) => compare(item, value, itemKey) <= 0
     );
   }
 
@@ -843,9 +862,11 @@ export class Iterate<T>
    * @param values The iterator with items to exclude.
    * @param equality An override for any existing equality logic.
    */
-  public exclude (values: Iterate<T>, equality?: IterateEquals<T>): Iterate<T>
+  public exclude (values: Iterate<T, any, any>, equality?: IterateEquals<T, any>): Iterate<T, K, S>
+  public exclude (values: Iterate<T, K, any>, equality?: IterateEquals<T, K>): Iterate<T, K, S>
+  public exclude (values: Iterate<T, K, S>, equality?: IterateEquals<T, K>): Iterate<T, K, S>
   {
-    return this.view<IterateEquals<T>>(
+    return this.view<IterateEquals<T, K>>(
       () => this.getEquality(equality),
       (isEqual, item) => !values.contains(item, isEqual)
     );
@@ -858,9 +879,11 @@ export class Iterate<T>
    * @param values The iterator with items to intersect with.
    * @param equality An override for any existing equality logic.
    */
-  public intersect (values: Iterate<T>, equality?: IterateEquals<T>): Iterate<T>
+  public intersect (values: Iterate<T, any, any>, equality?: IterateEquals<T, any>): Iterate<T, K, S>
+  public intersect (values: Iterate<T, K, any>, equality?: IterateEquals<T, K>): Iterate<T, K, S>
+  public intersect (values: Iterate<T, K, S>, equality?: IterateEquals<T, K>): Iterate<T, K, S>
   {
-    return this.view<IterateEquals<T>>(
+    return this.view<IterateEquals<T, K>>(
       () => this.getEquality(equality),
       (isEqual, item) => values.contains(item, isEqual)
     );
@@ -871,12 +894,12 @@ export class Iterate<T>
    * 
    * @param equality An override for any existing equality logic.
    */
-  public unique (equality?: IterateEquals<T>): Iterate<T>
+  public unique (equality?: IterateEquals<T, K>): Iterate<T, K, S>
   {
-    return this.view<{ existing: T[], isEqual: IterateEquals<T> }>(
+    return this.view<{ existing: Array<[K, T]>, isEqual: IterateEquals<T, K> }>(
       () => ({ existing: [], isEqual: this.getEquality(equality) }),
-      ({existing, isEqual}, item) => existing.findIndex(exist => isEqual(exist, item)) === -1,
-      ({existing}, item) => existing.push(item)
+      ({existing, isEqual}, item, itemKey) => existing.findIndex(([existKey, exist]) => isEqual(exist, item, existKey, itemKey)) === -1,
+      ({existing}, item, itemKey) => existing.push([itemKey, item])
     );
   }
 
@@ -888,12 +911,12 @@ export class Iterate<T>
    * @param onlyOnce If the view should contain unique or all duplicates.
    * @param equality An override for any existing equality logic.
    */
-  public duplicates (onlyOnce: boolean = false, equality?: IterateEquals<T>): Iterate<T>
+  public duplicates (onlyOnce: boolean = false, equality?: IterateEquals<T, K>): Iterate<T, K, S>
   { 
-    return this.view<{ existing: T[], once: boolean[], isEqual: IterateEquals<T> }>(
+    return this.view<{ existing: Array<[K, T]>, once: boolean[], isEqual: IterateEquals<T, K> }>(
       () => ({ existing: [], once: [], isEqual: this.getEquality(equality) }),
-      ({existing, once, isEqual}, item) =>  {
-        const index = existing.findIndex(exist => isEqual(exist, item));
+      ({existing, once, isEqual}, item, itemKey) =>  {
+        const index = existing.findIndex(([existKey, exist]) => isEqual(exist, item, existKey, itemKey));
         let act = index !== -1;
 
         if (act) {
@@ -902,7 +925,7 @@ export class Iterate<T>
           }
           once[index] = true;
         } else {
-          existing.push(item);
+          existing.push([itemKey, item]);
         }
 
         return act;
@@ -913,13 +936,13 @@ export class Iterate<T>
   /**
    * Returns a readonly view where mutations have no affect.
    */
-  public readonly (): Iterate<T>
+  public readonly (): Iterate<T, K, S>
   {
-    return new Iterate<T>(next =>
+    return new Iterate<T, K, S>(next =>
     {
-      this.iterate((item, prev) =>
+      this.iterate((item, itemKey, prev) =>
       {
-        if (next.act( item ) === IterateAction.STOP)
+        if (next.act( item, itemKey ) === IterateAction.STOP)
         {
           prev.stop()
         }
@@ -931,9 +954,9 @@ export class Iterate<T>
   /**
    * Returns a copy of the items in this view as a new iterator.
    */
-  public copy (): Iterate<T>
+  public copy (): Iterate<T, K, Array<[K, T]>>
   {
-    return Iterate.array(this.array());
+    return Iterate.tuples(this.tuples());
   }
 
   /**
@@ -943,20 +966,20 @@ export class Iterate<T>
    * 
    * @param onResolve 
    */
-  public viewResolved(onResolve: (items: T[], handleAct: (item: T, index: number) => IterateAction) => void): Iterate<T>
+  public viewResolved(onResolve: (items: Array<[K, T]>, handleAct: (item: T, itemKey: K, index: number) => IterateAction) => void): Iterate<T, K, S>
   {
-    return new Iterate<T>(next =>
+    return new Iterate<T, K, S>(next =>
     {
-      const items: T[] = this.array();
+      const items: Array<[K, T]> = this.tuples();
       const actions: IterateAction[] = [];
       const replaces: T[] = [];
       const original: T[] = [];
 
       let mutates: boolean = false;
 
-      onResolve(items, (item, index) => 
+      onResolve(items, (item, itemKey, index) => 
       {
-        const action = next.act(item);
+        const action = next.act(item, itemKey);
 
         if (action === IterateAction.REPLACE || action === IterateAction.REMOVE)
         {
@@ -973,7 +996,7 @@ export class Iterate<T>
       {
         let index: number = 0;
 
-        this.iterate((item, modifyIterate) =>
+        this.iterate((item, itemKey, modifyIterate) =>
         {
           switch (actions[ index ])
           {
@@ -1002,18 +1025,18 @@ export class Iterate<T>
    * 
    * @param comparator An override for any existing comparison logic.
    */
-  public sorted (comparator?: IterateCompare<T>): Iterate<T>
+  public sorted (comparator?: IterateCompare<T, K>): Iterate<T, K, S>
   {
     return this.viewResolved((items, handleAct) =>
     {
       const compare = this.getComparator(comparator);
-      const mapped = items.map((item, index) => ({ item, index }));
+      const mapped = items.map(([key, value], index) => ({ key, value, index }));
 
-      mapped.sort((a, b) => compare(a.item, b.item));
+      mapped.sort((a, b) => compare(a.value, b.value));
 
-      for (const {item, index} of mapped)
+      for (const {key, value, index} of mapped)
       {
-        if (handleAct(item, index) === IterateAction.STOP)
+        if (handleAct(value, key, index) === IterateAction.STOP)
         {
           return;
         }
@@ -1024,7 +1047,7 @@ export class Iterate<T>
   /**
    * Returns an view of items in this iterator and presents them in a random order.
    */
-  public shuffle (passes: number = 1): Iterate<T>
+  public shuffle (passes: number = 1): Iterate<T, K, S>
   {
     const swap = <X>(arr: X[], i: number, k: number) => {
       const t = arr[i];
@@ -1054,7 +1077,9 @@ export class Iterate<T>
 
       for (let i = 0; i < n; i++)
       {
-        if (handleAct(items[i], indices[i]) === IterateAction.STOP)
+        const [key, value] = items[i];
+
+        if (handleAct(value, key, indices[i]) === IterateAction.STOP)
         {
           return;
         }
@@ -1065,13 +1090,15 @@ export class Iterate<T>
   /**
    * Returns an view of items in this iterator and presents them in reverse.
    */
-  public reverse (): Iterate<T>
+  public reverse (): Iterate<T, K, S>
   {
     return this.viewResolved((items, handleAct) => 
     {
       for (let i = items.length - 1; i >= 0; i--)
       {
-        if (handleAct(items[i], i) === IterateAction.STOP)
+        const [key, value] = items[i];
+
+        if (handleAct(value, key, i) === IterateAction.STOP)
         {
           return;
         }
@@ -1087,18 +1114,18 @@ export class Iterate<T>
    * @param transformer The function which transforms an item to another.
    * @param untransformer The function which untransforms a value when replace is called.
    */
-  public transform<W>(transformer: IterateCallback<T, W>,
-    untransformer: (replaceWith: W, current: W, item: T) => T = null): Iterate<W>
+  public transform<W>(transformer: IterateCallback<T, K, S, W>,
+    untransformer: (replaceWith: W, current: W, item: T, key: K) => T = null): Iterate<W, K, S>
   {
-    return new Iterate<W>(next =>
+    return new Iterate<W, K, S>(next =>
     {
-      this.iterate((prevItem, prev) =>
+      this.iterate((prevItem, prevKey, prev) =>
       {
-        const nextItem: W = transformer( prevItem, prev );
+        const nextItem: W = transformer( prevItem, prevKey, prev );
 
         if (typeof nextItem !== 'undefined')
         {
-          switch (next.act( nextItem ))
+          switch (next.act( nextItem, prevKey ))
           {
             case IterateAction.STOP:
               prev.stop();
@@ -1108,7 +1135,7 @@ export class Iterate<T>
               break;
             case IterateAction.REPLACE:
               if (untransformer) {
-                prev.replace( untransformer( next.replaceWith, nextItem, prevItem ) );
+                prev.replace( untransformer( next.replaceWith, nextItem, prevItem, prevKey ) );
               }
               break;
           }
@@ -1124,7 +1151,7 @@ export class Iterate<T>
    *
    * @param callback The function to invoke for each item in this iterator.
    */
-  public iterate (callback: IterateCallback<T, any>): this
+  public iterate (callback: IterateCallback<T, K, S, any>): this
   {
     this.result = undefined;
     this.callback = callback;
@@ -1165,13 +1192,43 @@ export class Iterate<T>
    * @param items The array of items to iterate.
    * @returns A new iterator for the given array.
    */
-  public static array<T> (items: T[]): Iterate<T>
+  public static tuples<T, K> (items: Array<[K, T]>): Iterate<T, K, Array<[K, T]>>
   {
-    return new Iterate<T>(iterator =>
+    return new Iterate<T, K, Array<[K, T]>>(iterator =>
     {
       for (let i = 0; i < items.length; i++)
       {
-        switch (iterator.act(items[ i ]))
+        const [key, value] = items[ i ];
+
+        switch (iterator.act(value, key))
+        {
+          case IterateAction.STOP:
+            return;
+          case IterateAction.REMOVE:
+            items.splice(i, 1);
+            i--;
+            break;
+          case IterateAction.REPLACE:
+            items.splice(i, 1, [key, iterator.replaceWith]);
+            break;
+        }
+      }
+    });
+  }
+
+  /**
+   * Returns an iterator for the given array.
+   *
+   * @param items The array of items to iterate.
+   * @returns A new iterator for the given array.
+   */
+  public static array<T> (items: T[]): Iterate<T, number, T[]>
+  {
+    return new Iterate<T, number, T[]>(iterator =>
+    {
+      for (let i = 0; i < items.length; i++)
+      {
+        switch (iterator.act(items[ i ], i))
         {
           case IterateAction.STOP:
             return;
@@ -1193,21 +1250,23 @@ export class Iterate<T>
    * @param items The iterable collection.
    * @returns A new iterator for the given set.
    */
-  public static iterable<T, I extends Iterable<T>> (items: I): Iterate<T>
+  public static iterable<T, I extends Iterable<T>> (items: I): Iterate<T, number, I>
   {
-    return new Iterate<T>(iterator =>
+    return new Iterate<T, number, I>(iterator =>
     {
       const setIterator = items[Symbol.iterator]();
       let next = setIterator.next();
+      let index = 0;
 
       while (!next.done)
       {
-        if (iterator.act(next.value) === IterateAction.STOP)
+        if (iterator.act(next.value, index) === IterateAction.STOP)
         {
           break;
         }
 
         next = setIterator.next();
+        index++;
       }      
     });
   }
@@ -1220,9 +1279,9 @@ export class Iterate<T>
    * @param hasOwnProperty If `hasOwnProperty` should be checked.
    * @returns A new iterator for the given object.
    */
-  public static object<T> (items: { [key: string]: T }, hasOwnProperty: boolean = true): Iterate<T>
+  public static object<T> (items: { [key: string]: T }, hasOwnProperty: boolean = true): Iterate<T, string, { [key: string]: T }>
   {
-    return new Iterate<T>(iterator =>
+    return new Iterate<T, string, { [key: string]: T }>(iterator =>
     {
       for (const key in items)
       {
@@ -1231,7 +1290,7 @@ export class Iterate<T>
           continue;
         }
 
-        switch (iterator.act(items[ key ]))
+        switch (iterator.act(items[ key ], key))
         {
           case IterateAction.STOP:
             return;
@@ -1261,12 +1320,17 @@ export class Iterate<T>
    *    not specified and a replace is called and `strict` is true an error
    *    will be thrown.
    */
-  public static linked<N, T = any> (
+  public static linked<N, T = any, K = T> (
     getValue: (node: N) => T,
     getNext: (node: N) => N | undefined | null,
     remove?: (node: N, prev: N | undefined | null) => any,
-    replaceValue?: (node: N, value: T) => any)
+    replaceValue?: (node: N, value: T) => any,
+    getKey?: (node: N) => K)
   {
+    if (!getKey)
+    {
+      getKey = (node) => getValue(node) as unknown as K;
+    }
 
     /**
      * Allows iteration of a linked list starting at a node.
@@ -1283,7 +1347,7 @@ export class Iterate<T>
      */
     return function linkedIterator(startingNode: N, previousNode?: N | null, strict: boolean = true)
     {
-      return new Iterate<T>(iterator =>
+      return new Iterate<T, K, N>(iterator =>
       {
         let prev: N | undefined | null = previousNode;
         let curr: N | undefined | null = startingNode;
@@ -1293,7 +1357,7 @@ export class Iterate<T>
           const next = getNext(curr);
           let removed = false;
 
-          switch (iterator.act(getValue(curr)))
+          switch (iterator.act(getValue(curr), getKey(curr)))
           {
             case IterateAction.STOP:
               return;
@@ -1340,16 +1404,22 @@ export class Iterate<T>
    *    iterator which can return the children.
    * @param replaceValue A function which applies a value to a node.
    */
-  public static tree<N, T = any> (
+  public static tree<N, T = any, K = T> (
     getValue: (node: N) => T, 
-    getChildren: (node: N) => N[] | Iterate<N> | undefined | null, 
-    replaceValue?: (node: N, value: T) => any)
+    getChildren: (node: N) => N[] | Iterate<N, any, any> | undefined | null, 
+    replaceValue?: (node: N, value: T) => any,
+    getKey?: (node: N) => K)
   {
+    if (!getKey)
+    {
+      getKey = (node) => getValue(node) as unknown as K;
+    }
+
     // The iterator to return when a node doesn't have children.
-    const NO_CHILDREN = Iterate.empty<N>();
+    const NO_CHILDREN = Iterate.empty<N, any, any>();
 
     // Returns an Iterate for the children of the node
-    const getChildIterate = (node: N): Iterate<N> =>
+    const getChildIterate = (node: N): Iterate<N, any, any> =>
     {
       const children = getChildren(node);
 
@@ -1361,9 +1431,9 @@ export class Iterate<T>
     };
 
     // Handles actions done to the given node
-    const handleAction = (node: N, iter: Iterate<T>, strict: boolean, throwOnRemove: boolean, parent?: Iterate<N>): boolean =>
+    const handleAction = (node: N, iter: Iterate<T, K, N>, strict: boolean, throwOnRemove: boolean, parent?: Iterate<N, any, any>): boolean =>
     {
-      switch (iter.act(getValue(node)))
+      switch (iter.act(getValue(node), getKey(node)))
       {
         // call stop on the parent iterator and return false
         case IterateAction.STOP:
@@ -1395,7 +1465,7 @@ export class Iterate<T>
     };
 
     // Performs a depth-first iteration on the given tree
-    const traverseDepthFirst = (node: N, iter: Iterate<T>, strict: boolean, parent?: Iterate<N>): boolean =>
+    const traverseDepthFirst = (node: N, iter: Iterate<T, K, N>, strict: boolean, parent?: Iterate<N, any, any>): boolean =>
     { 
       if (!handleAction(node, iter, strict, false, parent))
       {
@@ -1403,12 +1473,12 @@ export class Iterate<T>
       }
 
       return !getChildIterate(node)
-        .iterate((child, childIter) => traverseDepthFirst(child, iter, strict, childIter))
+        .iterate((child, childKey, childIter) => traverseDepthFirst(child, iter, strict, childIter))
         .isStopped();
     };
 
     // Performs a breadth-first iteration on the given tree
-    const traverseBreadthFirst = (node: N, iter: Iterate<T>, strict: boolean): void =>
+    const traverseBreadthFirst = (node: N, iter: Iterate<T, K, N>, strict: boolean): void =>
     {
       const queue: N[] = [];
 
@@ -1442,9 +1512,9 @@ export class Iterate<T>
      * @param strict If an error should be thrown when an unsupported action is
      *    requested.
      */
-    return function treeIterator (startingNode: N, depthFirst: boolean = true, strict: boolean = true): Iterate<T>
+    return function treeIterator (startingNode: N, depthFirst: boolean = true, strict: boolean = true): Iterate<T, K, N>
     {
-      return new Iterate<T>(iter => depthFirst
+      return new Iterate<T, K, N>(iter => depthFirst
         ? traverseDepthFirst(startingNode, iter, strict)
         : traverseBreadthFirst(startingNode, iter, strict)
       );
@@ -1460,15 +1530,17 @@ export class Iterate<T>
    * @param iterators The array of iterators to join as one.
    * @returns A new iterator for the given iterators.
    */
-  public static join<T> (...iterators: Iterate<T>[]): Iterate<T>
+  public static join<T> (...iterators: Iterate<T, any, any>[]): Iterate<T, any, any>
+  public static join<T, K> (...iterators: Iterate<T, K, any>[]): Iterate<T, K, any>
+  public static join<T, K, S> (...iterators: Iterate<T, K, S>[]): Iterate<T, K, S>
   {
-    return new Iterate<T>(parent =>
+    return new Iterate<T, K, any>(parent =>
     {
       for (const child of iterators)
       {
-        child.iterate((item, childIterate) =>
+        child.iterate((item, itemKey, childIterate) =>
         {
-          switch (parent.act( item ))
+          switch (parent.act( item, itemKey ))
           {
             case IterateAction.REMOVE:
               childIterate.remove();
@@ -1495,9 +1567,9 @@ export class Iterate<T>
    *
    * @returns A new iterator with no items.
    */
-  public static empty<T> (): Iterate<T>
+  public static empty<T, K, S> (): Iterate<T, K, S>
   {
-    return new Iterate<T>(parent => { return; });
+    return new Iterate<T, K, S>(parent => { return; });
   }
 
   /**
@@ -1514,7 +1586,7 @@ export class Iterate<T>
    * @param correctType Verifies whether a value is valid.
    * @param compare Compares two valid values.
    */
-  public static compare<T> (ascending: boolean, nullsFirst: boolean, a: any, b: any, correctType: (x: any) => any, compare: IterateCompare<T>): number
+  public static compare<T, K> (ascending: boolean, nullsFirst: boolean, a: any, b: any, correctType: (x: any) => any, compare: IterateCompare<T, K>): number
   {
     const typeA = !correctType(a);
     const typeB = !correctType(b);
@@ -1545,7 +1617,7 @@ export class Iterate<T>
    * @param correctType Verifies whether a value is valid.
    * @param equals Compares two valid values for equality.
    */
-  public static equals<T> (a: any, b: any, correctType: (x: any) => any, equals: IterateEquals<T>): boolean
+  public static equals<T, K> (a: any, b: any, correctType: (x: any) => any, equals: IterateEquals<T, K>): boolean
   {
     const typeA = !correctType(a);
     const typeB = !correctType(b);
