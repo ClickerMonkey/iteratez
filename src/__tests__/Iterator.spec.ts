@@ -334,6 +334,31 @@ describe('Iterate', () => {
     expect( Iterate.array([1, 2]).set() ).toEqual( new Set([1, 2]) );
   });
 
+  it('iterable', () =>
+  {
+    expect( Iterate.iterable([1, 2, 3]).list() ).toEqual( [1, 2, 3] );
+    expect( Iterate.iterable(new Set([1, 2, 3])).list() ).toEqual( [1, 2, 3] );
+  });
+
+  it('readonly', () =>
+  {
+    const a = [1, 2, 3, 4];
+    const b = Iterate.array(a);
+
+    const c = b.where(x => x % 2 === 0).erase();
+
+    expect( c.list() ).toEqual( [] );
+    expect( a ).toEqual( [1, 3] );
+
+    const aa = [1, 2, 3, 4];
+    const bb = Iterate.array(aa).readonly();
+
+    const cc = bb.where(x => x % 2 === 0).erase();
+
+    expect( cc.list() ).toEqual( [2, 4] );
+    expect( aa ).toEqual( [1, 2, 3, 4] );
+  });
+
   interface Node<T> {
     value: T;
     children?: Node<T>[];   

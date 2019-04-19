@@ -44,6 +44,7 @@ import { IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateS
  * - `sorted`: that is sorted based on some comparison.
  * - `unique`: that has only unique values.
  * - `duplicates`: that has all the duplicate values.
+ * - `readonly`: that ignores modifiers.
  * - `take`: Returns an iterator that only iterates over the first X items.
  * - `skip`: Returns an iterator that skips the first X items.
  * - `drop`: Returns an iterator that drops off the last X items.
@@ -61,6 +62,7 @@ import { IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateS
  * - `object`: Iterates the properties of an object, optionally just the properties explicitly set on the object.
  * - `empty`: An iterator with no items
  * - `join`: Returns an iterator that iterates over one or more iterators.
+ * - `iterable`: Iterates any collection that implements iterable.
  *
  * @typeparam T The type of item being iterated.
  */
@@ -769,6 +771,24 @@ export class Iterate<T>
   }
 
   /**
+   * Returns a readonly view where modifiers have no affect.
+   */
+  public readonly (): Iterate<T>
+  {
+    return new Iterate<T>(next =>
+    {
+      this.iterate((item, prev) =>
+      {
+        if (next.act( item ) === IterateAction.STOP)
+        {
+          prev.stop()
+        }
+      });
+
+    }, this);
+  }
+
+  /**
    * Returns a view which requires a fully resolved list of items. The view 
    * must keep track of the original item index in order to ensure removals
    * and replaces can be performed on the source.
@@ -951,7 +971,7 @@ export class Iterate<T>
   }
 
   /**
-   * Returns an iterator for the given array optionally iterating it in reverse.
+   * Returns an iterator for the given array.
    *
    * @param items The array of items to iterate.
    * @returns A new iterator for the given array.
@@ -975,6 +995,31 @@ export class Iterate<T>
             break;
         }
       }
+    });
+  }
+
+  /**
+   * Returns an iterator for any iterable. Because iterables don't support 
+   *
+   * @param items The iterable collection.
+   * @returns A new iterator for the given set.
+   */
+  public static iterable<T, I extends Iterable<T>> (items: I): Iterate<T>
+  {
+    return new Iterate<T>(iterator =>
+    {
+      const setIterator = items[Symbol.iterator]();
+      let next = setIterator.next();
+
+      while (!next.done)
+      {
+        if (iterator.act(next.value) === IterateAction.STOP)
+        {
+          break;
+        }
+
+        next = setIterator.next();
+      }      
     });
   }
 
