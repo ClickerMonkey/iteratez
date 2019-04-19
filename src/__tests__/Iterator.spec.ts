@@ -159,6 +159,15 @@ describe('Iterate', () => {
     expect( c.array() ).toEqual( [1, 0, 2, 3, 4, 0] );
   });
 
+  it('update', () =>
+  {
+    const a = ['Apple', 'Banana'];
+
+    Iterate.array(a).update(x => x.toLowerCase())
+
+    expect( a ).toEqual( ['apple', 'banana'] );
+  });
+
   it('reverse', () =>
   {
     const a: number[] = [1, 2, 3, 4];

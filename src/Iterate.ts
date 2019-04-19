@@ -594,13 +594,23 @@ export class Iterate<T, K, S>
   }
 
   /**
-   * A mutation which replaces items in this iterator from the source.
+   * A mutation which replaces values in this view with a single given value.
    * 
-   * @param replacement The item to replace for all the items in this iterator.
+   * @param replacement The value to replace for all the values in this iterator.
    */
   public overwrite (replacement: T): this
   {
     return this.each((item, key, iterator) => iterator.replace(replacement));
+  }
+
+  /**
+   * A mutation which replaces values in this view with a dynamically created one.
+   * 
+   * @param updater A function which given a value and key returns a replacement value.
+   */
+  public update (updater: (item: T, key: K) => T): this
+  {
+    return this.each((item, key, iterator) => iterator.replace(updater(item, key)));
   }
 
   /**
