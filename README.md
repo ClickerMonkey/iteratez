@@ -17,7 +17,7 @@ The iterator is lazy, so you can chain "views" and iteration is not done until y
 - You can call "modifiers" to affect the underlying source.
   - `erase` `overwrite` `extract`
 - You can call "operations" to iterate and produce a result.
-  - `empty` `has` `contains` `first` `last` `count` `list` `object` `reduce` `min` `max` `iterate` `set`
+  - `empty` `has` `contains` `first` `last` `count` `list` `object` `reduce` `min` `max` `iterate` `set` `copy`
 - Create your own iterator.
 
 You can see all of these features in the examples below.
@@ -82,6 +82,7 @@ let personById = source.object(item => item.id); // { [item.id]: item }
 let sameObject = source.object(item => item.id, existingObject);
 let min = source.min(Iterate.COMPARE_NUMBER); // T
 let max = source.max(Iterate.COMPARE_NUMBER); // T
+let copy = source.copy(): // Iterate<T>
 
 // ============ Modifiers ============ 
 // These are at the end of a chain of views and they

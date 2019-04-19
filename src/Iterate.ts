@@ -25,9 +25,10 @@ import { IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateS
  * - `set`: Builds a Set of the items in the view.
  * - `object`: Builds an object of the items in the view.
  * - `reduce`: Reduces the items in the view down to a single value.
- * - `min`: Returns the minimum item in ths view.
- * - `max`: Returns the maximum item in ths view.
+ * - `min`: Returns the minimum item in the view.
+ * - `max`: Returns the maximum item in the view.
  * - `iterate`: Invokes a function for each item in the view.
+ * - `copy`: Copies the items in the view and returns a new iterator.
  * 
  * **Modifiers**
  * - `erase`: Removes items in the view from the source.
@@ -832,6 +833,14 @@ export class Iterate<T>
   }
 
   /**
+   * Returns a copy of the items in this view as a new iterator.
+   */
+  public copy (): Iterate<T>
+  {
+    return Iterate.array(this.list());
+  }
+
+  /**
    * Returns a view which requires a fully resolved list of items. The view 
    * must keep track of the original item index in order to ensure removals
    * and replaces can be performed on the source.
@@ -921,7 +930,7 @@ export class Iterate<T>
    */
   public shuffle (passes: number = 1): Iterate<T>
   {
-    const swap = <T>(arr: T[], i: number, k: number) => {
+    const swap = <X>(arr: X[], i: number, k: number) => {
       const t = arr[i];
       arr[i] = arr[k];
       arr[k] = t;

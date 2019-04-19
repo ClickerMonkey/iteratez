@@ -396,6 +396,24 @@ describe('Iterate', () => {
     expect( aa ).toEqual( [1, 2, 3, 4] );
   });
 
+  it('copy', () =>
+  {
+    const a = [1, 2, 3, 4];
+    const b = Iterate.array(a);
+
+    b.copy().erase();
+
+    expect( b.list() ).toEqual( [1, 2, 3, 4] );
+    expect( a ).toEqual( [1, 2, 3, 4] );
+
+    expect( b.copy().list() ).toEqual( [1, 2, 3, 4] );
+
+    b.erase();
+
+    expect( b.list() ).toEqual( [] );
+    expect( a ).toEqual( [] );
+  });
+
   interface Node<T> {
     value: T;
     children?: Node<T>[];   
