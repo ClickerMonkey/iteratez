@@ -273,9 +273,18 @@ describe('Iterate', () => {
     const iter = Iterate.array([1, 2, 3, 4, 5]);
     const iterated = [];
 
+    const iterable = iter[Symbol.iterator]();
+
+    for (let next = iterable.next(); !next.done; next = iterable.next())
+    {
+      iterated.push(next.value);
+    }
+
+    /* Add back once Visual Studio TS version matches project
     for (const num of iter) {
       iterated.push(num);
     }
+    */
 
     expect(iterated).toEqual([1, 2, 3, 4, 5]);
   });
@@ -389,6 +398,13 @@ describe('Iterate', () => {
   {
     expect( Iterate.array([]).set() ).toEqual( new Set([]) );
     expect( Iterate.array([1, 2]).set() ).toEqual( new Set([1, 2]) );
+  });
+
+  it('map', () => 
+  {
+    expect( Iterate.array([]).map() ).toEqual( new Map() );
+    expect( Iterate.array([1, 2]).map() ).toEqual( new Map([[0, 1], [1, 2]]) );
+    expect( Iterate.object({x: 1, y: 2}).map() ).toEqual( new Map([['x', 1], ['y', 2]]) );
   });
 
   it('group', () =>

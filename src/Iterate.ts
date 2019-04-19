@@ -503,6 +503,19 @@ export class Iterate<T, K, S>
   }
 
   /**
+   * An operation that builds a Map of key-value pairs from the source.
+   *
+   * @param out The Map to place the items in.
+   * @returns The reference to `out` which has had items added to it.
+   */
+  public map (out: Map<K, T> = new Map()): Map<K, T>
+  {
+    this.iterate((item, itemKey) => out.set(itemKey, item));
+
+    return out;
+  }
+
+  /**
    * An operation that returns an object with arrays of items where the 
    * property of the object is a key returned by a function.
    * 
@@ -1245,6 +1258,37 @@ export class Iterate<T, K, S>
   }
 
   /**
+   * Returns an iterator for the given array.
+   *
+   * @param items The array of items to iterate.
+   * @returns A new iterator for the given array.
+   */
+  public static map<T, K> (items: Map<K, T>): Iterate<T, K, Map<K, T>>
+  {
+    return new Iterate<T, K, Map<K, T>>(iterator =>
+    {
+      const iterable = items.entries();
+
+      for (let next = iterable.next(); !next.done; next = iterable.next())
+      {
+        const [key, value] = next.value;
+
+        switch (iterator.act(value, key))
+        {
+          case IterateAction.STOP:
+            return;
+          case IterateAction.REMOVE:
+            items.delete(key);
+            break;
+          case IterateAction.REPLACE:
+            items.set(key, iterator.replaceWith);
+            break;
+        }
+      }
+    });
+  }
+
+  /**
    * Returns an iterator for any iterable. Because iterables don't support 
    *
    * @param items The iterable collection.
@@ -1254,20 +1298,16 @@ export class Iterate<T, K, S>
   {
     return new Iterate<T, number, I>(iterator =>
     {
-      const setIterator = items[Symbol.iterator]();
-      let next = setIterator.next();
+      const iterable = items[Symbol.iterator]();
       let index = 0;
 
-      while (!next.done)
+      for (let next = iterable.next(); !next.done; next = iterable.next(), index++)
       {
         if (iterator.act(next.value, index) === IterateAction.STOP)
         {
           break;
         }
-
-        next = setIterator.next();
-        index++;
-      }      
+      }
     });
   }
 
