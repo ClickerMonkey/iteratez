@@ -37,6 +37,7 @@ import { IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateS
  * **Views**
  * Returns an iterator...
  * - `where`: for a subset of the items.
+ * - `not`: for a subset of the items (opposite of where).
  * - `map`: that maps the items to another value.
  * - `reverse`: that iterates over the items in reverse order.
  * - `exclude`: that excludes items found in another iterator.
@@ -633,6 +634,19 @@ export class Iterate<T>
     return this.view<null>(
       () => null,
       (data, item) => where(item)
+    );
+  }
+
+  /**
+   * Returns a view of items in this iterator which do NOT pass a `not` function.
+   * 
+   * @param not The function which determines if an item should be iterated.
+   */
+  public not (not: IterateFilter<T>): Iterate<T>
+  {
+    return this.view<null>(
+      () => null,
+      (data, item) => !not(item)
     );
   }
 

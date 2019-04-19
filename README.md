@@ -13,7 +13,7 @@ The iterator is lazy, so you can chain "views" and iteration is not done until y
 - If the underlying source supports it, remove an item.
 - If the underlying source supports it, replace an item.
 - You can chain "views" which don't cause iteration until an "operation" or "modifier" are called.
-  - `where` `map` `reverse` `exclude` `intersect` `sorted` `unique` `duplicates` `take` `skip` `drop` `append` `prepend` `gt` `gte` `lt` `lte` `sub` `readonly`
+  - `where` `not` `map` `reverse` `exclude` `intersect` `sorted` `unique` `duplicates` `take` `skip` `drop` `append` `prepend` `gt` `gte` `lt` `lte` `sub` `readonly`
 - You can call "modifiers" to affect the underlying source.
   - `erase` `overwrite` `extract`
 - You can call "operations" to iterate and produce a result.
@@ -103,6 +103,7 @@ source.where(x => x > 34).overwrite(12); // replace all numbers over 34 with 12
 // items in the view.
 
 source.where(x => x.age > 0); // items that past test
+source.not(x => x.age > 0); // items that don't pass test
 source.map(x => x.name); // items mapped to a new type
 source.reverse(); // items in reverse
 source.exclude(anotherSource); // not shared items

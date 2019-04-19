@@ -164,6 +164,15 @@ describe('Iterate', () => {
     expect( even ).toEqual( [2, 4] );
   })
 
+  it('not', () =>
+  {
+    const a: number[] = [1, 2, 3, 4];
+    const isEven = (x: number) => x % 2 === 0;
+    const even: number[] = Iterate.array( a ).not( isEven ).list();
+
+    expect( even ).toEqual( [1, 3] );
+  })
+
   it('map', () =>
   {
     const a: number[] = [1, 2, 3, 4];
