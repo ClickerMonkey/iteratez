@@ -1,6 +1,6 @@
 {
   "name": "iteratez",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "A simple yet powerful iterator that allows iteration for even the most complex types.",
   "main": "dist/iteratez.js",
   "typings": "typings/index.d.ts",
