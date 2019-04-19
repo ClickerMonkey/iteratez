@@ -13,11 +13,11 @@ The iterator is lazy, so you can chain "views" and iteration is not done until y
 - If the underlying source supports it, remove an item.
 - If the underlying source supports it, replace an item.
 - You can chain "views" which don't cause iteration until an "operation" or "modifier" are called.
-  - `where` `map` `reverse` `exclude` `intersect` `sorted` `unique` `duplicates` `take` `skip` `drop` `append` `prepend` `gt` `gte` `lt` `lte` `sub`
+  - `where` `map` `reverse` `exclude` `intersect` `sorted` `unique` `duplicates` `take` `skip` `drop` `append` `prepend` `gt` `gte` `lt` `lte` `sub` 
 - You can call "modifiers" to affect the underlying source.
   - `erase` `overwrite` `extract`
 - You can call "operations" to iterate and produce a result.
-  - `empty` `has` `contains` `first` `last` `count` `list` `object` `reduce` `min` `max` `iterate`
+  - `empty` `has` `contains` `first` `last` `count` `list` `object` `reduce` `min` `max` `iterate` `set`
 - Create your own iterator.
 
 You can see all of these features in the examples below.
@@ -76,6 +76,7 @@ let first = source.first(); // T
 let last = source.last(); // T
 let count = source.count(); // number
 let array = source.list(); // T[]
+let set = source.set(); // Set<T>
 let sameArray = source.list(existingArray); // T[]
 let personById = source.object(item => item.id); // { [item.id]: item }
 let sameObject = source.object(item => item.id, existingObject);

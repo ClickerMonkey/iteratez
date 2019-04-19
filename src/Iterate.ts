@@ -15,23 +15,24 @@ import { IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateS
  * **Modifier** function are called on it.
  * 
  * **Operations**
- * - `empty`: Determines whether the source contains no items.
- * - `has`: Determines whether the source contains any items.
- * - `contains`: Determines if the source contains a specific item.
- * - `first`: Gets the first item in the source.
- * - `last`: Gets the last item in the source.
- * - `count`: Counds the number of items in the source.
- * - `list`: Builds a list of the items in the source.
- * - `object`: Builds an object of the items in the source.
- * - `reduce`: Reduces the items in the source down to a single value.
- * - `min`: Returns the minimum item in ths source.
- * - `max`: Returns the maximum item in ths source.
- * - `iterate`: Invokes a function for each item in the source.
+ * - `empty`: Determines whether the view contains no items.
+ * - `has`: Determines whether the view contains any items.
+ * - `contains`: Determines if the view contains a specific item.
+ * - `first`: Gets the first item in the view.
+ * - `last`: Gets the last item in the view.
+ * - `count`: Counds the number of items in the view.
+ * - `list`: Builds an array of the items in the view.
+ * - `set`: Builds a Set of the items in the view.
+ * - `object`: Builds an object of the items in the view.
+ * - `reduce`: Reduces the items in the view down to a single value.
+ * - `min`: Returns the minimum item in ths view.
+ * - `max`: Returns the maximum item in ths view.
+ * - `iterate`: Invokes a function for each item in the view.
  * 
  * **Modifiers**
- * - `erase`: Removes items in the iterator from the source.
- * - `overwrite`: Replaces items in the iterator from the source.
- * - `extract`: Removes items in the iterator from the source and returns a new iterator with the removed items.
+ * - `erase`: Removes items in the view from the source.
+ * - `overwrite`: Replaces items in the view from the source.
+ * - `extract`: Removes items in the view from the source and returns a new iterator with the removed items.
  * 
  * **Views**
  * Returns an iterator...
@@ -394,6 +395,19 @@ export class Iterate<T>
   public object<O = { [key: string]: T }> (getKey: (item: T) => keyof O, out: O = Object.create(null)): O
   {
     this.iterate(item => out[ getKey( item ) as string ] = item);
+
+    return out;
+  }
+
+  /**
+   * An operation that builds a Set of items from the source.
+   *
+   * @param out The Set to place the items in.
+   * @returns The reference to `out` which has had items added to it.
+   */
+  public set (out: Set<T> = new Set()): Set<T>
+  {
+    this.iterate(item => out.add( item ));
 
     return out;
   }

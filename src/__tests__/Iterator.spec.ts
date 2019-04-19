@@ -315,6 +315,25 @@ describe('Iterate', () => {
     expect( b ).toEqual( [4, 7] );
   });
 
+  it('list', () => 
+  {
+    expect( Iterate.array([]).list() ).toEqual( [] );
+    expect( Iterate.array([1, 2]).list() ).toEqual( [1, 2] );
+    expect( Iterate.object({x: 1, y: 4}).list() ).toEqual( [1, 4] );
+  });
+
+  it('object', () => 
+  {
+    expect( Iterate.array([]).object(x => x) ).toEqual( {} );
+    expect( Iterate.array([1, 2]).object(x => x) ).toEqual( {1: 1, 2: 2} );
+  });
+
+  it('set', () => 
+  {
+    expect( Iterate.array([]).set() ).toEqual( new Set([]) );
+    expect( Iterate.array([1, 2]).set() ).toEqual( new Set([1, 2]) );
+  });
+
   interface Node<T> {
     value: T;
     children?: Node<T>[];   
