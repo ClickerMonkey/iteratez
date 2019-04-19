@@ -8,11 +8,11 @@ import { IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateS
  * There are 3 types of functions in an Iterate:
  * - **Operation**: produces a result from the items in the iterator.
  * - **View**: produces a new iterator, the original iterator is not affected.
- * - **Modifier**: modifies the source based on the values in the current iterator.
+ * - **Mutation**: modifies the source based on the values in the current iterator.
  * 
  * The **View** functions do not iterate over the source, the iterator they
  * return does not iterate over the source until an **Operation** or 
- * **Modifier** function are called on it.
+ * **Mutation** function are called on it.
  * 
  * **Operations**
  * - `empty`: Determines whether the view contains no items.
@@ -21,7 +21,7 @@ import { IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateS
  * - `first`: Gets the first item in the view.
  * - `last`: Gets the last item in the view.
  * - `count`: Counds the number of items in the view.
- * - `list`: Builds an array of the items in the view.
+ * - `array`: Builds an array of the items in the view.
  * - `set`: Builds a Set of the items in the view.
  * - `object`: Builds an object of the items in the view.
  * - `group`: Builds an object of item arrays grouped by a value derived from each item.
@@ -31,8 +31,8 @@ import { IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateS
  * - `iterate`: Invokes a function for each item in the view.
  * - `copy`: Copies the items in the view and returns a new iterator.
  * 
- * **Modifiers**
- * - `erase`: Removes items in the view from the source.
+ * **Mutations**
+ * - `delete`: Removes items in the view from the source.
  * - `overwrite`: Replaces items in the view from the source.
  * - `extract`: Removes items in the view from the source and returns a new iterator with the removed items.
  * 
@@ -40,7 +40,7 @@ import { IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateS
  * Returns an iterator...
  * - `where`: for a subset of the items.
  * - `not`: for a subset of the items (opposite of where).
- * - `map`: that maps the items to another value.
+ * - `transform`: that transforms the items to another type.
  * - `reverse`: that iterates over the items in reverse order.
  * - `exclude`: that excludes items found in another iterator.
  * - `intersect`: that has common items in another iterator.
@@ -48,7 +48,7 @@ import { IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateS
  * - `shuffle`: that is randomly ordered.
  * - `unique`: that has only unique values.
  * - `duplicates`: that has all the duplicate values.
- * - `readonly`: that ignores modifiers.
+ * - `readonly`: that ignores mutations.
  * - `take`: that only iterates over the first X items.
  * - `skip`: that skips the first X items.
  * - `drop`: that drops off the last X items.
@@ -381,12 +381,12 @@ export class Iterate<T>
   }
 
   /**
-   * An operation that builds a list of items from the source.
+   * An operation that builds an array of items from the source.
    *
    * @param out The array to place the items in.
    * @returns The reference to `out` which has had items added to it.
    */
-  public list (out: T[] = []): T[]
+  public array (out: T[] = []): T[]
   {
     this.iterate(item => out.push( item ));
 
@@ -494,15 +494,15 @@ export class Iterate<T>
   }
 
   /**
-   * A modifier which removes items in this iterator from the source.
+   * A mutation which removes items in this iterator from the source.
    */
-  public erase (): this
+  public delete (): this
   {
     return this.iterate((item, iterator) => iterator.remove());
   }
 
   /**
-   * A modifier which removes items in this iterator from the source and 
+   * A mutation which removes items in this iterator from the source and 
    * returns a new iterator with the removed items.
    */
   public extract (): Iterate<T>
@@ -515,7 +515,7 @@ export class Iterate<T>
   }
 
   /**
-   * A modifier which replaces items in this iterator from the source.
+   * A mutation which replaces items in this iterator from the source.
    * 
    * @param replacement The item to replace for all the items in this iterator.
    */
@@ -525,11 +525,11 @@ export class Iterate<T>
   }
 
   /**
-   * A sub-view which allows modifiers and operations to be perfomed in a
+   * A sub-view which allows mutations and operations to be perfomed in a
    * separate chain and once done you can resume the chain after this sub.
    * 
    * @param subIterate A function which takes the iterator at this point and 
-   *    performs any modifiers and operations.
+   *    performs any mutations and operations.
    * @returns The reference to this iterator.
    */
   public sub (subIterate: (sub: this) => any): this
@@ -845,7 +845,7 @@ export class Iterate<T>
   }
 
   /**
-   * Returns a readonly view where modifiers have no affect.
+   * Returns a readonly view where mutations have no affect.
    */
   public readonly (): Iterate<T>
   {
@@ -867,11 +867,11 @@ export class Iterate<T>
    */
   public copy (): Iterate<T>
   {
-    return Iterate.array(this.list());
+    return Iterate.array(this.array());
   }
 
   /**
-   * Returns a view which requires a fully resolved list of items. The view 
+   * Returns a view which requires a fully resolved array of items. The view 
    * must keep track of the original item index in order to ensure removals
    * and replaces can be performed on the source.
    * 
@@ -881,12 +881,12 @@ export class Iterate<T>
   {
     return new Iterate<T>(next =>
     {
-      const items: T[] = this.list();
+      const items: T[] = this.array();
       const actions: IterateAction[] = [];
       const replaces: T[] = [];
       const original: T[] = [];
 
-      let modifies: boolean = false;
+      let mutates: boolean = false;
 
       onResolve(items, (item, index) => 
       {
@@ -894,7 +894,7 @@ export class Iterate<T>
 
         if (action === IterateAction.REPLACE || action === IterateAction.REMOVE)
         {
-          modifies = true;
+          mutates = true;
           original[ index ] = item;
           actions[ index ] = action;
           replaces[ index ] = next.replaceWith;
@@ -903,7 +903,7 @@ export class Iterate<T>
         return action;
       });
 
-      if (modifies)
+      if (mutates)
       {
         let index: number = 0;
 
@@ -1015,20 +1015,20 @@ export class Iterate<T>
 
   /**
    * Returns an iterator where this iterator is the source and the returned
-   * iterator is built from mapped items pulled from items in the source
+   * iterator is built from transformed items pulled from items in the source
    * of this iterator. 
    *
-   * @param mapper The function which maps an item to another.
-   * @param unmapper The function which unmaps a value when replace is called.
+   * @param transformer The function which transforms an item to another.
+   * @param untransformer The function which untransforms a value when replace is called.
    */
-  public map<W>(mapper: IterateCallback<T, W>,
-    unmapper: (replaceWith: W, current: W, item: T) => T = null): Iterate<W>
+  public transform<W>(transformer: IterateCallback<T, W>,
+    untransformer: (replaceWith: W, current: W, item: T) => T = null): Iterate<W>
   {
     return new Iterate<W>(next =>
     {
       this.iterate((prevItem, prev) =>
       {
-        const nextItem: W = mapper( prevItem, prev );
+        const nextItem: W = transformer( prevItem, prev );
 
         if (typeof nextItem !== 'undefined')
         {
@@ -1041,8 +1041,8 @@ export class Iterate<T>
               prev.remove();
               break;
             case IterateAction.REPLACE:
-              if (unmapper) {
-                prev.replace( unmapper( next.replaceWith, nextItem, prevItem ) );
+              if (untransformer) {
+                prev.replace( untransformer( next.replaceWith, nextItem, prevItem ) );
               }
               break;
           }
@@ -1090,7 +1090,7 @@ export class Iterate<T>
    */
   [Symbol.iterator] (): Iterator<T>
   {
-    return this.list().values();
+    return this.array().values();
   }
 
   /**
@@ -1357,7 +1357,7 @@ export class Iterate<T>
           break;
         }
 
-        getChildIterate(next).list(queue);
+        getChildIterate(next).array(queue);
       }
     };
 

@@ -109,40 +109,40 @@ describe('Iterate', () => {
     expect( Iterate.array([1, 0, 3, 2]).desc(Iterate.COMPARE_NUMBER).max() ).toEqual(0);
   });
 
-  it('erase', () =>
+  it('delete', () =>
   {
     const a = Iterate.array([1, 2, 3, 4]);
-    a.erase();
-    expect( a.list() ).toEqual( [] );
+    a.delete();
+    expect( a.array() ).toEqual( [] );
 
     const b = Iterate.array([1, 2, 0, 3]);
-    b.where(x => x % 2 === 0).erase();
-    expect (b.list() ).toEqual( [1, 3] );
+    b.where(x => x % 2 === 0).delete();
+    expect (b.array() ).toEqual( [1, 3] );
 
     const c = Iterate.array([1, 1, 2, 3, 4, 1]);
-    c.duplicates(false).erase();
-    expect( c.list() ).toEqual( [1, 2, 3, 4] );
+    c.duplicates(false).delete();
+    expect( c.array() ).toEqual( [1, 2, 3, 4] );
   });
 
   it('overwrite', () =>
   {
     const a = Iterate.array([1, 2, 3, 4]);
     a.overwrite(0);
-    expect( a.list() ).toEqual( [0, 0, 0, 0] );
+    expect( a.array() ).toEqual( [0, 0, 0, 0] );
 
     const b = Iterate.array([1, 2, 0, 3]);
     b.where(x => x % 2 === 0).overwrite(0);
-    expect (b.list() ).toEqual( [1, 0, 0, 3] );
+    expect (b.array() ).toEqual( [1, 0, 0, 3] );
 
     const c = Iterate.array([1, 1, 2, 3, 4, 1]);
     c.duplicates(false).overwrite(0);
-    expect( c.list() ).toEqual( [1, 0, 2, 3, 4, 0] );
+    expect( c.array() ).toEqual( [1, 0, 2, 3, 4, 0] );
   });
 
   it('reverse', () =>
   {
     const a: number[] = [1, 2, 3, 4];
-    const out: number[] = Iterate.array( a ).reverse().list();
+    const out: number[] = Iterate.array( a ).reverse().array();
 
     expect( out ).toEqual( [4, 3, 2, 1] );
   })
@@ -159,7 +159,7 @@ describe('Iterate', () => {
   {
     const a: number[] = [1, 2, 3, 4];
     const isEven = (x: number) => x % 2 === 0;
-    const even: number[] = Iterate.array( a ).where( isEven ).list();
+    const even: number[] = Iterate.array( a ).where( isEven ).array();
 
     expect( even ).toEqual( [2, 4] );
   })
@@ -168,26 +168,26 @@ describe('Iterate', () => {
   {
     const a: number[] = [1, 2, 3, 4];
     const isEven = (x: number) => x % 2 === 0;
-    const even: number[] = Iterate.array( a ).not( isEven ).list();
+    const even: number[] = Iterate.array( a ).not( isEven ).array();
 
     expect( even ).toEqual( [1, 3] );
   })
 
-  it('map', () =>
+  it('transform', () =>
   {
     const a: number[] = [1, 2, 3, 4];
-    const mapped: string[] = Iterate.array( a )
-      .map<string>(item => 'x' + item)
-      .list();
+    const transformed: string[] = Iterate.array( a )
+      .transform<string>(item => 'x' + item)
+      .array();
 
-    expect( mapped ).toEqual( ['x1', 'x2', 'x3', 'x4'] );
+    expect( transformed ).toEqual( ['x1', 'x2', 'x3', 'x4'] );
   })
 
   it('join', () =>
   {
     const a: number[] = [1, 2, 3];
     const b = {x: 4, y: 5, z: 6};
-    const c: number[] = Iterate.join( Iterate.array( a ), Iterate.object( b ) ).list();
+    const c: number[] = Iterate.join( Iterate.array( a ), Iterate.object( b ) ).array();
 
     expect( c ).toEqual( [1, 2, 3, 4, 5, 6] );
   })
@@ -195,21 +195,21 @@ describe('Iterate', () => {
   it('skip', () =>
   {
     const a: number[] = [1, 2, 3, 4, 5];
-    const b: number[] = Iterate.array( a ).skip( 2 ).list();
+    const b: number[] = Iterate.array( a ).skip( 2 ).array();
 
     expect( b ).toEqual( [3, 4, 5] );
 
-    expect( Iterate.array([1, 5, 2, 3, 4, 6]).where(x => x % 2).skip(1).list() ).toEqual( [5, 3] );
+    expect( Iterate.array([1, 5, 2, 3, 4, 6]).where(x => x % 2).skip(1).array() ).toEqual( [5, 3] );
   })
 
   it('take', () =>
   {
     const a: number[] = [1, 2, 3, 4];
-    const b: number[] = Iterate.array( a ).take( 3 ).list();
+    const b: number[] = Iterate.array( a ).take( 3 ).array();
 
     expect( b ).toEqual( [1, 2, 3] );
 
-    expect( Iterate.array([1, 5, 2, 3, 4]).sorted(Iterate.COMPARE_NUMBER).take(3).list() ).toEqual( [1, 2, 3] );
+    expect( Iterate.array([1, 5, 2, 3, 4]).sorted(Iterate.COMPARE_NUMBER).take(3).array() ).toEqual( [1, 2, 3] );
   })
 
   it('drop', () =>
@@ -217,15 +217,15 @@ describe('Iterate', () => {
     const a: number[] = [1, 2, 3, 4];
     const b: number[] = [1, 2, 3, 4, 5, 6];
 
-    expect( Iterate.array(a).drop(2).list() ).toEqual([1, 2]);
+    expect( Iterate.array(a).drop(2).array() ).toEqual([1, 2]);
 
-    expect( Iterate.array(b).drop(2).list() ).toEqual([1, 2, 3, 4]);
+    expect( Iterate.array(b).drop(2).array() ).toEqual([1, 2, 3, 4]);
   });
 
   it('skip take', () =>
   {
     const a: number[] = [1, 2, 3, 4, 5, 6];
-    const b: number[] = Iterate.array( a ).skip( 2 ).take( 2 ).list();
+    const b: number[] = Iterate.array( a ).skip( 2 ).take( 2 ).array();
 
     expect( b ).toEqual( [3, 4] );
   })
@@ -234,7 +234,7 @@ describe('Iterate', () => {
   {
     const a: number[] = [1, 2, 3, 4, 5];
     const iter = Iterate.array( a );
-    const b: number[] = iter.skip( 3 ).append(iter.take( 1 )).list();
+    const b: number[] = iter.skip( 3 ).append(iter.take( 1 )).array();
 
     expect( b ).toEqual( [4, 5, 1] );
   })
@@ -243,7 +243,7 @@ describe('Iterate', () => {
   {
     const a: number[] = [1, 2, 3, 4, 5];
     const iter = Iterate.array( a );
-    const b: number[] = iter.skip( 3 ).prepend(iter.take( 1 )).list();
+    const b: number[] = iter.skip( 3 ).prepend(iter.take( 1 )).array();
 
     expect( b ).toEqual( [1, 4, 5] );
   })
@@ -262,37 +262,37 @@ describe('Iterate', () => {
 
   it('gt', () =>
   {
-    expect( Iterate.array([1, 2, 3, 4, 5]).gt(3, Iterate.COMPARE_NUMBER).list() ).toEqual( [4, 5] );
+    expect( Iterate.array([1, 2, 3, 4, 5]).gt(3, Iterate.COMPARE_NUMBER).array() ).toEqual( [4, 5] );
   });
 
   it('gte', () =>
   {
-    expect( Iterate.array([1, 2, 3, 4, 5]).gte(3, Iterate.COMPARE_NUMBER).list() ).toEqual( [3, 4, 5] );
+    expect( Iterate.array([1, 2, 3, 4, 5]).gte(3, Iterate.COMPARE_NUMBER).array() ).toEqual( [3, 4, 5] );
   });
 
   it('lt', () =>
   {
-    expect( Iterate.array([1, 2, 3, 4, 5]).lt(3, Iterate.COMPARE_NUMBER).list() ).toEqual( [1, 2] );
+    expect( Iterate.array([1, 2, 3, 4, 5]).lt(3, Iterate.COMPARE_NUMBER).array() ).toEqual( [1, 2] );
   });
 
   it('lte', () =>
   {
-    expect( Iterate.array([1, 2, 3, 4, 5]).lte(3, Iterate.COMPARE_NUMBER).list() ).toEqual( [1, 2, 3] );
+    expect( Iterate.array([1, 2, 3, 4, 5]).lte(3, Iterate.COMPARE_NUMBER).array() ).toEqual( [1, 2, 3] );
   });
 
   it('exclude', () =>
   {
-    expect( Iterate.array([1, 2, 3, 4]).exclude(Iterate.array([2, 4])).list() ).toEqual( [1, 3] );
+    expect( Iterate.array([1, 2, 3, 4]).exclude(Iterate.array([2, 4])).array() ).toEqual( [1, 3] );
   });
 
   it('intersect', () =>
   {
-    expect( Iterate.array([1, 2, 3, 4]).intersect(Iterate.array([2, 4, 5])).list() ).toEqual( [2, 4] );
+    expect( Iterate.array([1, 2, 3, 4]).intersect(Iterate.array([2, 4, 5])).array() ).toEqual( [2, 4] );
   });
 
   it('unique', () =>
   {
-    expect( Iterate.array([1, 2, 3, 2, 1, 4, 2, 5]).unique().list() ).toEqual( [1, 2, 3, 4, 5] );
+    expect( Iterate.array([1, 2, 3, 2, 1, 4, 2, 5]).unique().array() ).toEqual( [1, 2, 3, 4, 5] );
   });
 
   it('sorted', () =>
@@ -300,14 +300,14 @@ describe('Iterate', () => {
     const a = Iterate.array([1, 6, 2, 3, 8, 7, 0, 3]);
     const aSorted = a.sorted(Iterate.COMPARE_NUMBER);
 
-    expect( aSorted.list() ).toEqual( [0, 1, 2, 3, 3, 6, 7, 8] );
-    expect( aSorted.take(3).list() ).toEqual( [0, 1, 2] );
-    aSorted.take(3).erase();
-    expect( a.list() ).toEqual( [6, 3, 8, 7, 3] );
+    expect( aSorted.array() ).toEqual( [0, 1, 2, 3, 3, 6, 7, 8] );
+    expect( aSorted.take(3).array() ).toEqual( [0, 1, 2] );
+    aSorted.take(3).delete();
+    expect( a.array() ).toEqual( [6, 3, 8, 7, 3] );
 
     const b = Iterate.array([1, 6, 2, 3, 8, 7, 0, 3, 7, 6]);
     b.sorted(Iterate.COMPARE_NUMBER).skip(5).overwrite(0);
-    expect( b.list() ).toEqual( [1, 0, 2, 3, 0, 0, 0, 3, 0, 0] );
+    expect( b.array() ).toEqual( [1, 0, 2, 3, 0, 0, 0, 3, 0, 0] );
   });
 
   it('shuffle', () =>
@@ -315,7 +315,7 @@ describe('Iterate', () => {
     const a = [1, 2, 3, 4, 5, 6, 7];
     const b = Iterate.array(a);
 
-    expect( b.shuffle().list() ).not.toEqual(a);
+    expect( b.shuffle().array() ).not.toEqual(a);
   })
 
   it('sub', () =>
@@ -324,11 +324,11 @@ describe('Iterate', () => {
     const b: number[] = [];
 
     a.where(x => x > 3)
-      .sub(s => s.where(x => x % 3 === 0).erase() )
-      .sub(s => s.where(x => x % 3 === 2).erase() )
-      .list(b);
+      .sub(s => s.where(x => x % 3 === 0).delete() )
+      .sub(s => s.where(x => x % 3 === 2).delete() )
+      .array(b);
 
-    expect( a.list() ).toEqual( [1, 2, 3, 4, 7] );
+    expect( a.array() ).toEqual( [1, 2, 3, 4, 7] );
     expect( b ).toEqual( [4, 7] );
   });
 
@@ -339,8 +339,8 @@ describe('Iterate', () => {
     const c: number[] = [];
 
     a.split(x => x % 2 === 0, (pass, fail) => {
-      pass.list(b);
-      fail.list(c);
+      pass.array(b);
+      fail.array(c);
     });
 
     expect( b ).toEqual( [2, 4, 6, 8] );
@@ -348,15 +348,15 @@ describe('Iterate', () => {
 
     const { pass, fail } = a.split(x => x % 2 === 0);
 
-    expect( pass.list() ).toEqual( [2, 4, 6, 8] );
-    expect( fail.list() ).toEqual( [1, 3, 5, 7] );
+    expect( pass.array() ).toEqual( [2, 4, 6, 8] );
+    expect( fail.array() ).toEqual( [1, 3, 5, 7] );
   });
 
-  it('list', () => 
+  it('array', () => 
   {
-    expect( Iterate.array([]).list() ).toEqual( [] );
-    expect( Iterate.array([1, 2]).list() ).toEqual( [1, 2] );
-    expect( Iterate.object({x: 1, y: 4}).list() ).toEqual( [1, 4] );
+    expect( Iterate.array([]).array() ).toEqual( [] );
+    expect( Iterate.array([1, 2]).array() ).toEqual( [1, 2] );
+    expect( Iterate.object({x: 1, y: 4}).array() ).toEqual( [1, 4] );
   });
 
   it('object', () => 
@@ -384,8 +384,8 @@ describe('Iterate', () => {
 
   it('iterable', () =>
   {
-    expect( Iterate.iterable([1, 2, 3]).list() ).toEqual( [1, 2, 3] );
-    expect( Iterate.iterable(new Set([1, 2, 3])).list() ).toEqual( [1, 2, 3] );
+    expect( Iterate.iterable([1, 2, 3]).array() ).toEqual( [1, 2, 3] );
+    expect( Iterate.iterable(new Set([1, 2, 3])).array() ).toEqual( [1, 2, 3] );
   });
 
   it('readonly', () =>
@@ -393,17 +393,17 @@ describe('Iterate', () => {
     const a = [1, 2, 3, 4];
     const b = Iterate.array(a);
 
-    const c = b.where(x => x % 2 === 0).erase();
+    const c = b.where(x => x % 2 === 0).delete();
 
-    expect( c.list() ).toEqual( [] );
+    expect( c.array() ).toEqual( [] );
     expect( a ).toEqual( [1, 3] );
 
     const aa = [1, 2, 3, 4];
     const bb = Iterate.array(aa).readonly();
 
-    const cc = bb.where(x => x % 2 === 0).erase();
+    const cc = bb.where(x => x % 2 === 0).delete();
 
-    expect( cc.list() ).toEqual( [2, 4] );
+    expect( cc.array() ).toEqual( [2, 4] );
     expect( aa ).toEqual( [1, 2, 3, 4] );
   });
 
@@ -412,16 +412,16 @@ describe('Iterate', () => {
     const a = [1, 2, 3, 4];
     const b = Iterate.array(a);
 
-    b.copy().erase();
+    b.copy().delete();
 
-    expect( b.list() ).toEqual( [1, 2, 3, 4] );
+    expect( b.array() ).toEqual( [1, 2, 3, 4] );
     expect( a ).toEqual( [1, 2, 3, 4] );
 
-    expect( b.copy().list() ).toEqual( [1, 2, 3, 4] );
+    expect( b.copy().array() ).toEqual( [1, 2, 3, 4] );
 
-    b.erase();
+    b.delete();
 
-    expect( b.list() ).toEqual( [] );
+    expect( b.array() ).toEqual( [] );
     expect( a ).toEqual( [] );
   });
 
@@ -463,16 +463,16 @@ describe('Iterate', () => {
     const list = getLinkedList();
     const listIterator = linkedIterator(list.next, list);
     
-    expect( listIterator.list() ).toEqual( ['a', 'b', 'c', 'd', 'e'] );
-    expect( listIterator.where(L => L === 'a' || L === 'd').list() ).toEqual( ['a', 'd'] );
+    expect( listIterator.array() ).toEqual( ['a', 'b', 'c', 'd', 'e'] );
+    expect( listIterator.where(L => L === 'a' || L === 'd').array() ).toEqual( ['a', 'd'] );
 
-    listIterator.where(L => L === 'a' || L === 'd').erase();
+    listIterator.where(L => L === 'a' || L === 'd').delete();
 
-    expect( listIterator.list() ).toEqual( ['b', 'c', 'e'] );
+    expect( listIterator.array() ).toEqual( ['b', 'c', 'e'] );
 
-    listIterator.erase();
+    listIterator.delete();
 
-    expect( listIterator.list() ).toEqual( [] );
+    expect( listIterator.array() ).toEqual( [] );
   });
 
   interface TreeNode<T> {
@@ -519,7 +519,7 @@ describe('Iterate', () => {
   it('tree depth', () =>
   {
     const tree = getTree();
-    const list = treeIterator(tree, true).list();
+    const list = treeIterator(tree, true).array();
 
     expect(list).toEqual(['Harry', 'Michael', 'Robert', 'Philip', 'Mackenzie', 'Mason', 'Joseph', 'Miles', 'Katlyn', 'Alyssa', 'Donald']);
   });
@@ -527,7 +527,7 @@ describe('Iterate', () => {
   it('tree breadth', () =>
   {
     const tree = getTree();
-    const list = treeIterator(tree, false).list();
+    const list = treeIterator(tree, false).array();
 
     expect(list).toEqual(['Harry', 'Michael', 'Donald', 'Robert', 'Philip', 'Joseph', 'Katlyn', 'Alyssa', 'Mackenzie', 'Mason', 'Miles']);
   });
@@ -536,9 +536,9 @@ describe('Iterate', () => {
   {
     const tree = getTree();
     
-    treeIterator(tree).where(name => name.indexOf('e') !== -1).erase();
+    treeIterator(tree).where(name => name.indexOf('e') !== -1).delete();
 
-    const list = treeIterator(tree).list();
+    const list = treeIterator(tree).array();
 
     expect(list).toEqual(['Harry', 'Donald']);
   });
@@ -549,7 +549,7 @@ describe('Iterate', () => {
 
     treeIterator(tree).iterate((name, iter) => iter.replace(name.toLowerCase()));
 
-    const list = treeIterator(tree).list();
+    const list = treeIterator(tree).array();
 
     expect(list).toEqual(['harry', 'michael', 'robert', 'philip', 'mackenzie', 'mason', 'joseph', 'miles', 'katlyn', 'alyssa', 'donald']);
   });
