@@ -124,7 +124,7 @@ let source = yourSource.yourIteratorGenerator();
 // ============ ITERATION ============ 
 
 // Stop
-source.iterate((item, itemKey, iter) => {
+source.each((item, itemKey, iter) => {
   if (someCondition(item)) {
     iter.stop(42)
   }
@@ -137,14 +137,14 @@ source.iterate((item, itemKey, iter) => {
 // - if the source is a sequential collection, it's removed from the sequence (array, object, etc)
 // - if the source is a tree, it removes it from the tree including it's children
 // - otherwise, up to the custom source
-source.iterate((item, itemKey, iter) => {
+source.each((item, itemKey, iter) => {
   if (someCondition(item)) {
     iter.remove();
   }
 });
 
 // Replace
-source.iterate((item, itemKey, iter) => {
+source.each((item, itemKey, iter) => {
   if (someCondition(item)) {
     iter.replace(replacement);
   }
@@ -251,13 +251,13 @@ source.transform<string>(
   (replaceWith, current, item) => {
     item.name = replaceWith;
   }
-).iterate((name, key, iter) => {
+).each((name, key, iter) => {
   // Make all names uppercase in the most obtuse way possible
   iter.replace(name.toUpperCase());
 });
 
 // Iterate with a callback
-source.iterate((item, key, iter) => {
+source.each((item, key, iter) => {
   // iter.remove();
   // iter.stop(withResult);
   // iter.replace(newValue);

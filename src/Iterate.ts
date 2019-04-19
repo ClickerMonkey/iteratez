@@ -371,7 +371,7 @@ export class Iterate<T, K, S>
    */
   public empty (): boolean
   {
-    return !this.iterate((item, key, iterator) => iterator.stop()).isStopped();
+    return !this.each((item, key, iterator) => iterator.stop()).isStopped();
   }
 
   /**
@@ -381,7 +381,7 @@ export class Iterate<T, K, S>
    */
   public has (): boolean
   {
-    return this.iterate((item, key, iterator) => iterator.stop()).isStopped();
+    return this.each((item, key, iterator) => iterator.stop()).isStopped();
   }
 
   /**
@@ -404,7 +404,7 @@ export class Iterate<T, K, S>
   {
     let total: number = 0;
 
-    this.iterate(() => total++);
+    this.each(() => total++);
 
     return total;
   }
@@ -416,7 +416,7 @@ export class Iterate<T, K, S>
    */
   public first (): T
   {
-    return this.iterate((item, key, iterator) => iterator.stop(item)).result;
+    return this.each((item, key, iterator) => iterator.stop(item)).result;
   }
 
   /**
@@ -428,7 +428,7 @@ export class Iterate<T, K, S>
   {
     let last: T = null;
 
-    this.iterate(item => last = item);
+    this.each(item => last = item);
 
     return last;
   }
@@ -441,7 +441,7 @@ export class Iterate<T, K, S>
    */
   public array (out: T[] = []): T[]
   {
-    this.iterate(item => out.push( item ));
+    this.each(item => out.push( item ));
 
     return out;
   }
@@ -454,7 +454,7 @@ export class Iterate<T, K, S>
    */
   public entries (out: Array<[K, T]> = []): Array<[K, T]>
   {
-    this.iterate((item, itemKey) => out.push([itemKey, item]));
+    this.each((item, itemKey) => out.push([itemKey, item]));
 
     return out;
   }
@@ -469,7 +469,7 @@ export class Iterate<T, K, S>
    */
   public object<O = { [key: string]: T }> (getKey: (item: T) => keyof O, out: O = Object.create(null)): O
   {
-    this.iterate(item => out[ getKey( item ) as string ] = item);
+    this.each(item => out[ getKey( item ) as string ] = item);
 
     return out;
   }
@@ -482,7 +482,7 @@ export class Iterate<T, K, S>
    */
   public set (out: Set<T> = new Set()): Set<T>
   {
-    this.iterate(item => out.add( item ));
+    this.each(item => out.add( item ));
 
     return out;
   }
@@ -495,7 +495,7 @@ export class Iterate<T, K, S>
    */
   public map (out: Map<K, T> = new Map()): Map<K, T>
   {
-    this.iterate((item, itemKey) => out.set(itemKey, item));
+    this.each((item, itemKey) => out.set(itemKey, item));
 
     return out;
   }
@@ -510,7 +510,7 @@ export class Iterate<T, K, S>
    */
   public group<G extends { [by: string]: T[] }> (by: (item: T) => any, out: G = Object.create(null)): G
   {
-    this.iterate(item => 
+    this.each(item => 
     {
       const key = by(item);
 
@@ -541,7 +541,7 @@ export class Iterate<T, K, S>
   {
     let reduced: R = initial;
 
-    this.iterate(item => reduced = reducer( item, reduced ));
+    this.each(item => reduced = reducer( item, reduced ));
 
     return reduced;
   }
@@ -577,7 +577,7 @@ export class Iterate<T, K, S>
    */
   public delete (): this
   {
-    return this.iterate((item, key, iterator) => iterator.remove());
+    return this.each((item, key, iterator) => iterator.remove());
   }
 
   /**
@@ -588,7 +588,7 @@ export class Iterate<T, K, S>
   {
     const extracted: Array<[K, T]> = [];
 
-    this.iterate((item, key, iterator) => extracted.push([key, item]) && iterator.remove());
+    this.each((item, key, iterator) => extracted.push([key, item]) && iterator.remove());
 
     return Iterate.entries(extracted);
   }
@@ -600,7 +600,7 @@ export class Iterate<T, K, S>
    */
   public overwrite (replacement: T): this
   {
-    return this.iterate((item, key, iterator) => iterator.replace(replacement));
+    return this.each((item, key, iterator) => iterator.replace(replacement));
   }
 
   /**
@@ -683,7 +683,7 @@ export class Iterate<T, K, S>
     {
       let index = 0;
 
-      this.iterate((item, itemKey, prev) =>
+      this.each((item, itemKey, prev) =>
       {
         switch (next.act( itemKey, index++ ))
         {
@@ -710,7 +710,7 @@ export class Iterate<T, K, S>
   {
     return new Iterate<T, number, S>(next =>
     {
-      this.iterate((item, itemKey, prev) =>
+      this.each((item, itemKey, prev) =>
       {
         let index = 0;
 
@@ -749,7 +749,7 @@ export class Iterate<T, K, S>
     {
       const data = getData();
 
-      this.iterate((item, itemKey, prev) =>
+      this.each((item, itemKey, prev) =>
       {
         if (shouldAct(data, item, itemKey))
         {
@@ -1026,7 +1026,7 @@ export class Iterate<T, K, S>
   {
     return new Iterate<T, K, S>(next =>
     {
-      this.iterate((item, itemKey, prev) =>
+      this.each((item, itemKey, prev) =>
       {
         if (next.act( item, itemKey ) === IterateAction.STOP)
         {
@@ -1082,7 +1082,7 @@ export class Iterate<T, K, S>
       {
         let index: number = 0;
 
-        this.iterate((item, itemKey, modifyIterate) =>
+        this.each((item, itemKey, modifyIterate) =>
         {
           switch (actions[ index ])
           {
@@ -1205,7 +1205,7 @@ export class Iterate<T, K, S>
   {
     return new Iterate<W, K, S>(next =>
     {
-      this.iterate((prevItem, prevKey, prev) =>
+      this.each((prevItem, prevKey, prev) =>
       {
         const nextItem: W = transformer( prevItem, prevKey, prev );
 
@@ -1237,7 +1237,7 @@ export class Iterate<T, K, S>
    *
    * @param callback The function to invoke for each item in this iterator.
    */
-  public iterate (callback: IterateCallback<T, K, S, any>): this
+  public each (callback: IterateCallback<T, K, S, any>): this
   {
     this.result = undefined;
     this.callback = callback;
@@ -1357,7 +1357,7 @@ export class Iterate<T, K, S>
       const removeKeyAt: number[] = [];
       let valuesIndex = 0;
 
-      values.iterate((value, ignoreKey, prev) =>
+      values.each((value, ignoreKey, prev) =>
       {
         if (valuesIndex >= keysArray.length)
         {
@@ -1386,7 +1386,7 @@ export class Iterate<T, K, S>
       {
         let keysIndex = 0;
 
-        keys.iterate((key, ignoreKey, prev) =>
+        keys.each((key, ignoreKey, prev) =>
         {
           if (keysIndex === removeKeyAt[0])
           {
@@ -1692,7 +1692,7 @@ export class Iterate<T, K, S>
       }
 
       return !getChildIterate(node)
-        .iterate((child, childKey, childIter) => traverseDepthFirst(child, iter, strict, childIter))
+        .each((child, childKey, childIter) => traverseDepthFirst(child, iter, strict, childIter))
         .isStopped();
     };
 
@@ -1762,7 +1762,7 @@ export class Iterate<T, K, S>
 
       for (const child of iterators)
       {
-        child.iterate((item, itemKey, childIterate) =>
+        child.each((item, itemKey, childIterate) =>
         {
           switch (parent.act( item as T, itemKey as unknown as K ))
           {
