@@ -347,14 +347,14 @@ describe('Iterate', () => {
     expect( b.shuffle().array() ).not.toEqual(a);
   })
 
-  it('sub', () =>
+  it('fork', () =>
   {
     const a = Iterate.array([1, 2, 3, 4, 5, 6, 7, 8]);
     const b: number[] = [];
 
     a.where(x => x > 3)
-      .sub(s => s.where(x => x % 3 === 0).delete() )
-      .sub(s => s.where(x => x % 3 === 2).delete() )
+      .fork(f => f.where(x => x % 3 === 0).delete() )
+      .fork(f => f.where(x => x % 3 === 2).delete() )
       .array(b);
 
     expect( a.array() ).toEqual( [1, 2, 3, 4, 7] );
@@ -465,7 +465,7 @@ describe('Iterate', () => {
   it('keys', () =>
   {
     expect( Iterate.object({x: 1, y: 2, z: 3}).keys().array() ).toEqual( ['x', 'y', 'z'] );
-    expect( Iterate.object({x: 1, y: 2, z: 3}).sub(s => s.keys().take(1).delete()).array() ).toEqual( [2, 3] );
+    expect( Iterate.object({x: 1, y: 2, z: 3}).fork(f => f.keys().take(1).delete()).array() ).toEqual( [2, 3] );
   });
 
   it('group', () =>
@@ -558,7 +558,7 @@ describe('Iterate', () => {
   it('linked', () =>
   {
     const list = getLinkedList();
-    const listIterator = linkedIterator(list.next, list);
+    const listIterator = linkedIterator(list);
     
     expect( listIterator.array() ).toEqual( ['a', 'b', 'c', 'd', 'e'] );
     expect( listIterator.where(L => L === 'a' || L === 'd').array() ).toEqual( ['a', 'd'] );

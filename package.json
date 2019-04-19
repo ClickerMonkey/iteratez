@@ -3,7 +3,6 @@
   "version": "0.0.1",
   "description": "A simple yet powerful iterator that allows iteration for even the most complex types.",
   "main": "dist/iteratez.js",
-  "mainName": "iz",
   "typings": "typings/index.d.ts",
   "repository": {
     "type": "git",

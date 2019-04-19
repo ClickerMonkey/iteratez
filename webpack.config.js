@@ -1,5 +1,4 @@
 const path = require('path');
-const webpack = require('webpack');
 
 const ROOT = path.resolve( __dirname, 'src' );
 const DESTINATION = path.resolve( __dirname, 'dist' );
@@ -8,15 +7,16 @@ module.exports = {
     context: ROOT,
 
     entry: {
-        main: './index.ts'
+        iteratez: './index.ts'
     },
     
     output: {
-        filename: 'iteratez.js',
+        filename: '[name].js',
         path: DESTINATION,
         libraryTarget: 'umd',
-        library: 'iz',
+        library: '[name]',
         umdNamedDefine: true,
+        globalObject: 'this'
     },
 
     resolve: {

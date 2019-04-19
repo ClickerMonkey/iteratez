@@ -50,3 +50,81 @@ export type IterateEquals<T, K> = (a: T, b: T, aKey?: K, bKey?: K) => boolean;
  * @returns A number representing which item is greater.
  */
 export type IterateCompare<T, K> = (a: T, b: T, aKey?: K, bKey?: K) => number;
+
+
+/**
+ * A function that looks at the source and if it can provide an iterator
+ * it returns one. Otherwise false is returned.
+ * 
+ * @param source The source to test.
+ */
+export type IterateGenerator<T, K, S> = (source: any) => Iterate<T, K, S> | false;
+
+
+/**
+ * A type which has an entries() function that returns an IterableIterator.
+ */
+export interface HasEntries<T, K> 
+{ 
+  entries(): IterableIterator<[K, T]>
+}
+
+/**
+ * Any of the valid sources natively supported.
+ * 
+ * You can add to these types by overriding the definitions. See the README.
+ */
+export type IterateSourceType<T> =
+  Iterate<T, any, any> |
+  T[] |
+  Set<T> |
+  Map<any, T> | 
+  Iterable<T> |
+  HasEntries<T, any> |
+  { [key: string]: T } |
+  null |
+  undefined |
+  T;
+
+/**
+ * Any of the valid sources natively supported with specific keys.
+ * 
+ * You can add to these types by overriding the definitions. See the README.
+ */
+export type IterateSourceTypeKey<T, K, S = any> =
+  Iterate<T, K, S> |
+  (K extends number ? T[] : never) |
+  (K extends T ? Set<T> : never) | 
+  Map<K, T> |
+  (K extends number ? Iterable<T> : never) |
+  HasEntries<T, K> |
+  (K extends string ? { [key: string]: T } : never ) |
+  null | 
+  undefined |
+  (K extends number ? T : never);
+
+/**
+ * Given a source, attempt to get its stype.
+ */
+export type GetValueFor<S> = 
+  (S extends Array<infer T> ? T : never) | 
+  (S extends Iterate<infer T, infer K, S> ? T : never) |
+  (S extends Set<infer T> ? T : never) |
+  (S extends Map<infer K, infer T> ? T : never) |
+  (S extends Iterable<infer T> ? T : never) |
+  (S extends HasEntries<infer T, infer K> ? T : never) |
+  (S extends { [key: string]: infer T } ? T : never);
+
+/**
+ * Given a source, attempt to get its key.
+ */
+export type GetKeyFor<S> = 
+  (S extends Iterate<infer T, infer K, S> ? K : never) |
+  (S extends Array<infer T> ? number : never) | 
+  (S extends Set<infer T> ? T : never) |
+  (S extends Map<infer K, infer T> ? K : never) |
+  (S extends Iterable<infer T> ? number : never) |
+  (S extends HasEntries<infer T, infer K> ? K : never) |
+  (S extends { [key: string]: infer T } ? string : never) |
+  number;
+

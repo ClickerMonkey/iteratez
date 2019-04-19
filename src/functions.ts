@@ -1,4 +1,56 @@
-import { IterateCompare, IterateEquals } from './types';
+import { Iterate } from './Iterate';
+import { IterateCompare, IterateEquals, IterateGenerator } from './types';
+
+
+/**
+ * An array of iterate generators. These are checked in order. If you wish to 
+ * add your own you should do:
+ * 
+ * `Generators.unshift(s => isSourceLogic ? createIterate : false)`
+ */
+export const Generators: IterateGenerator<any, any, any>[] = [
+  (s) => s instanceof Iterate ? s : false,
+  (s) => Array.isArray(s) ? Iterate.array(s) : false,
+  (s) => s instanceof Set ? Iterate.set(s) : false,
+  (s) => s instanceof Map ? Iterate.map(s) : false,
+  (s) => s && s[Symbol.iterator] ? Iterate.iterable(s) : false,
+  (s) => s && s.entries ? Iterate.hasEntries(s) : false,
+  (s) => s === undefined || s === null ? Iterate.empty() : false,
+  (s) => typeof s === 'object' ? Iterate.object(s) : false,
+  (s) => Iterate.array([s])
+];
+
+/**
+ * A function which is given a value and finds the best way to iterate over it.
+ * 
+ * If you wish to add your own iterater to be supported you should add it to
+ * the begging of [[Generators]]. You can then add a custom definition for this
+ * function in your project so the overloaded function definition is available.
+ * 
+ * @param s The source to get an iterator for.
+ */
+export function iterate<T, K, S> (iterate: Iterate<T, K, S>): Iterate<T, K, S>
+export function iterate<T> (array: T[]): Iterate<T, number, T[]>
+export function iterate<T> (set: Set<T>): Iterate<T, T, Set<T>>
+export function iterate<T, K> (map: Map<K, T>): Iterate<T, K, Map<K, T>>
+export function iterate (str: string): Iterate<string, number, string>
+export function iterate<T, I extends Iterable<T>> (iterable: I): Iterate<T, number, I>
+export function iterate<T, K, E extends { entries(): IterableIterator<[K, T]> }> (hasEntries: E): Iterate<T, K, E>
+export function iterate<T> (object: { [key: string]: T} ): Iterate<T, string, { [key: string]: T}>
+export function iterate<T> (empty?: null): Iterate<any, any, any>
+export function iterate<T> (item: T): Iterate<T, number, [T]>
+export function iterate<T, K, S> (s: any): Iterate<T, K, S>
+{
+  for (const generator of Generators)
+  {
+    const generated = generator(s);
+
+    if (generated !== false)
+    {
+      return generated;
+    }
+  }
+}
 
 
 /**

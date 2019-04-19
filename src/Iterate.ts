@@ -1,6 +1,6 @@
+import { getDateComparator, getDateEquality, getNumberComparator, getStringComparator, iterate } from './functions';
 import { IterateAction } from "./IterateAction";
-import { IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateSource } from "./types";
-import { getNumberComparator, getStringComparator, getDateComparator, getDateEquality } from './functions';
+import { GetKeyFor, GetValueFor, HasEntries, IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateSource, IterateSourceType, IterateSourceTypeKey } from "./types";
 
 
 /**
@@ -63,7 +63,7 @@ import { getNumberComparator, getStringComparator, getDateComparator, getDateEqu
  * - `gte`: that only has items greater than or equal to a value.
  * - `lt`: that only has items less than a value.
  * - `lte`: that only has items less than or equal to a value.
- * - `sub`: that is this, but allows a function to perform sub operations
+ * - `fork`: that is this, but allows a function to perform fork operations
  * - `split`: Splits the items into two iterators (pass/fail) based on a condition.
  * - `unzip`: Splits the view into two iterates (keys/values).
  * 
@@ -604,16 +604,18 @@ export class Iterate<T, K, S>
   }
 
   /**
-   * A sub-view which allows mutations and operations to be perfomed in a
-   * separate chain and once done you can resume the chain after this sub.
+   * Forks this view into another and returns a reference to this view.
+   * This allows chaining of multiple views which each perform a different
+   * operation or mutation. Forks are executed sequentially, so if one fork
+   * performs mutations the subsequent forks will see the mutated items.
    * 
-   * @param subIterate A function which takes the iterator at this point and 
+   * @param forker A function which takes the iterator at this point and 
    *    performs any mutations and operations.
    * @returns The reference to this iterator.
    */
-  public sub (subIterate: (sub: this) => any): this
+  public fork (forker: (fork: this) => any): this
   {
-    subIterate(this);
+    forker(this);
 
     return this;
   }
@@ -831,11 +833,13 @@ export class Iterate<T, K, S>
    *
    * @param iterators The iterators to append after this one.
    */
-  public append (...iterators: Iterate<T, any, any>[]): Iterate<T, any, any>
-  public append (...iterators: Iterate<T, K, any>[]): Iterate<T, K, any>
-  public append (...iterators: Iterate<T, K, S>[]): Iterate<T, K, S>
+  public append (...sources: S[]): Iterate<T, K, S>;
+  public append (...sources: IterateSourceTypeKey<T, K>[]): Iterate<T, K, any>;
+  public append (...sources: IterateSourceType<T>[]): Iterate<T, any, any>;
+  public append (...sources: IterateSourceType<any>[]): Iterate<any, any, any>;
+  public append (...sources: any[]): Iterate<any, any, any>
   {
-    return Iterate.join<T, K>( this, ...iterators );
+    return Iterate.join( this, ...sources );
   }
 
   /**
@@ -844,11 +848,13 @@ export class Iterate<T, K, S>
    *
    * @param iterators The iterators to prepend before this one.
    */
-  public prepend (...iterators: Iterate<T, any, any>[]): Iterate<T, any, any>
-  public prepend (...iterators: Iterate<T, K, any>[]): Iterate<T, K, any>
-  public prepend (...iterators: Iterate<T, K, S>[]): Iterate<T, K, S>
+  public prepend (...sources: S[]): Iterate<T, K, S>;
+  public prepend (...sources: IterateSourceTypeKey<T, K>[]): Iterate<T, K, any>;
+  public prepend (...sources: IterateSourceType<T>[]): Iterate<T, any, any>;
+  public prepend (...sources: IterateSourceType<any>[]): Iterate<any, any, any>;
+  public prepend (...sources: any[]): Iterate<any, any, any>
   {
-    return Iterate.join<T, K>( ...iterators, this );
+    return Iterate.join( ...sources, this );
   }
 
   /**
@@ -944,13 +950,12 @@ export class Iterate<T, K, S>
    * @param values The iterator with items to exclude.
    * @param equality An override for any existing equality logic.
    */
-  public exclude (values: Iterate<T, any, any>, equality?: IterateEquals<T, any>): Iterate<T, K, S>
-  public exclude (values: Iterate<T, K, any>, equality?: IterateEquals<T, K>): Iterate<T, K, S>
-  public exclude (values: Iterate<T, K, S>, equality?: IterateEquals<T, K>): Iterate<T, K, S>
+  public exclude (source: IterateSourceType<T>, equality?: IterateEquals<T, any>): Iterate<T, K, S>;
+  public exclude (source: any, equality?: IterateEquals<T, K>): Iterate<T, K, S>
   {
-    return this.view<IterateEquals<T, K>>(
-      () => this.getEquality(equality),
-      (isEqual, item) => !values.contains(item, isEqual)
+    return this.view<[IterateEquals<T, K>, Iterate<T, any, any>]>(
+      () => [this.getEquality(equality), iterate(source)],
+      ([isEqual, values], item) => !values.contains(item, isEqual)
     );
   }
 
@@ -961,13 +966,12 @@ export class Iterate<T, K, S>
    * @param values The iterator with items to intersect with.
    * @param equality An override for any existing equality logic.
    */
-  public intersect (values: Iterate<T, any, any>, equality?: IterateEquals<T, any>): Iterate<T, K, S>
-  public intersect (values: Iterate<T, K, any>, equality?: IterateEquals<T, K>): Iterate<T, K, S>
-  public intersect (values: Iterate<T, K, S>, equality?: IterateEquals<T, K>): Iterate<T, K, S>
+  public intersect (source: IterateSourceType<T>, equality?: IterateEquals<T, any>): Iterate<T, K, S>;
+  public intersect (source: any, equality?: IterateEquals<T, K>): Iterate<T, K, S>
   {
-    return this.view<IterateEquals<T, K>>(
-      () => this.getEquality(equality),
-      (isEqual, item) => values.contains(item, isEqual)
+    return this.view<[IterateEquals<T, K>, Iterate<T, any, any>]>(
+      () => [this.getEquality(equality), iterate(source)],
+      ([isEqual, values], item) => values.contains(item, isEqual)
     );
   }
 
@@ -1339,10 +1343,14 @@ export class Iterate<T, K, S>
    * @param keys The iterator to obtain the keys from.
    * @param values The iterator to obtain the values from.
    */
-  public static zip<T, K> (keys: Iterate<K, any, any>, values: Iterate<T, any, any>): Iterate<T, K, any>
-  public static zip<T, K> (keys: Iterate<K, number, any>, values: Iterate<T, number, any>): Iterate<T, K, any>
-  public static zip<T, K, S = any> (keys: Iterate<K, number, S>, values: Iterate<T, number, S>): Iterate<T, K, S>
+  public static zip<T, K, S extends IterateSourceTypeKey<T, K, S>> (keys: S, values: S): Iterate<T, K, S>
+  public static zip<T, K> (keys: IterateSourceTypeKey<K, number>, values: IterateSourceTypeKey<T, number>): Iterate<T, K, any>
+  public static zip<T, K> (keys: IterateSourceType<K>, values: IterateSourceType<T>): Iterate<T, K, any>
+  public static zip<T, K, S> (keySource: any, valueSource: any): Iterate<T, K, S>
   {
+    const keys = iterate(keySource);
+    const values = iterate(valueSource);
+
     return new Iterate<T, K, S>(next =>
     {
       const keysArray = keys.array();
@@ -1357,7 +1365,7 @@ export class Iterate<T, K, S>
         }
         else
         {
-          switch (next.act(value, keysArray[valuesIndex]))
+          switch (next.act(value as T, keysArray[valuesIndex] as unknown as K))
           {
             case IterateAction.STOP:
               return;
@@ -1403,7 +1411,7 @@ export class Iterate<T, K, S>
    * @param onRemove The function that should handle removing a key/value.
    * @param onReplace The function that should handle replacing a value.
    */
-  public static hasEntries<T, K, E extends { entries(): IterableIterator<[K, T]> }> (
+  public static hasEntries<T, K, E extends HasEntries<T, K>> (
     hasEntries: E, 
     onRemove?: (entries: E, key: K, value: T) => any, 
     onReplace?: (entries: E, key: K, value: T, newValue: T) => any): Iterate<T, K, E>
@@ -1538,7 +1546,7 @@ export class Iterate<T, K, S>
   public static linked<N, T = any, K = T> (
     getValue: (node: N) => T,
     getNext: (node: N) => N | undefined | null,
-    remove?: (node: N, prev: N | undefined | null) => any,
+    remove?: (node: N, prev: N) => any,
     replaceValue?: (node: N, value: T) => any,
     getKey?: (node: N) => K)
   {
@@ -1553,19 +1561,18 @@ export class Iterate<T, K, S>
      * If `strict` is true and a remove/replace is requested that can not be
      * done then an error will be thrown.
      * 
-     * @param startingNode The node to start traversing at.
      * @param previousNode The previous node. This is necessary of the 
      *    starting node is requested to be removed, the user still needs a 
      *    reference to the first node.
      * @param strict If an error should be thrown when an unsupported action is
      *    requested.
      */
-    return function linkedIterator(startingNode: N, previousNode?: N | null, strict: boolean = true)
+    return function linkedIterator(previousNode: N, strict: boolean = true)
     {
       return new Iterate<T, K, N>(iterator =>
       {
-        let prev: N | undefined | null = previousNode;
-        let curr: N | undefined | null = startingNode;
+        let prev: N = previousNode;
+        let curr: N | undefined | null = getNext(previousNode);
 
         while (curr && curr !== previousNode)
         {
@@ -1579,9 +1586,6 @@ export class Iterate<T, K, S>
 
             case IterateAction.REMOVE:
               if (remove) {
-                if (curr === startingNode) {
-                  startingNode = next;
-                }
                 remove(curr, prev);
                 removed = true;
               } else if (strict) {
@@ -1737,25 +1741,30 @@ export class Iterate<T, K, S>
   }
 
   /**
-   * Joins all the given iterators into a single iterator where the items
+   * Joins all the given sources into a single iterator where the items
    * returned are in the same order as passed to this function. If any items
    * are removed from the returned iterator they will be removed from the given
    * iterator if it supports removal.
    *
-   * @param iterators The array of iterators to join as one.
-   * @returns A new iterator for the given iterators.
+   * @param sources The sources to get iterators for to join.
+   * @returns A new iterator for the given sources.
    */
-  public static join<T> (...iterators: Iterate<T, any, any>[]): Iterate<T, any, any>
-  public static join<T, K> (...iterators: Iterate<T, K, any>[]): Iterate<T, K, any>
-  public static join<T, K, S> (...iterators: Iterate<T, K, S>[]): Iterate<T, K, S>
+  public static join<T, K, S> (...sources: Iterate<T, K, S>[]): Iterate<T, K, S>;
+  public static join<S, T extends GetValueFor<S>, K extends GetKeyFor<S>> (...sources: S[]): Iterate<T, K, S>;
+  public static join<T, K> (...sources: IterateSourceTypeKey<T, K>[]): Iterate<T, K, any>;
+  public static join<T> (...sources: IterateSourceType<T>[]): Iterate<T, any, any>;
+  public static join (...sources: IterateSourceType<any>[]): Iterate<any, any, any>;
+  public static join<T, K, S> (...sources: any[]): Iterate<T, K, S>
   {
-    return new Iterate<T, K, any>(parent =>
+    return new Iterate<T, K, S>(parent =>
     {
+      const iterators = sources.map(iterate);
+
       for (const child of iterators)
       {
         child.iterate((item, itemKey, childIterate) =>
         {
-          switch (parent.act( item, itemKey ))
+          switch (parent.act( item as T, itemKey as unknown as K ))
           {
             case IterateAction.REMOVE:
               childIterate.remove();
