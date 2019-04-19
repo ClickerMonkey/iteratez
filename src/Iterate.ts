@@ -43,6 +43,7 @@ import { IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateS
  * - `exclude`: that excludes items found in another iterator.
  * - `intersect`: that has common items in another iterator.
  * - `sorted`: that is sorted based on some comparison.
+ * - `shuffle`: that is randomly ordered.
  * - `unique`: that has only unique values.
  * - `duplicates`: that has all the duplicate values.
  * - `readonly`: that ignores modifiers.
@@ -908,6 +909,47 @@ export class Iterate<T>
       for (const {item, index} of mapped)
       {
         if (handleAct(item, index) === IterateAction.STOP)
+        {
+          return;
+        }
+      }
+    });
+  }
+
+  /**
+   * Returns an view of items in this iterator and presents them in a random order.
+   */
+  public shuffle (passes: number = 1): Iterate<T>
+  {
+    const swap = <T>(arr: T[], i: number, k: number) => {
+      const t = arr[i];
+      arr[i] = arr[k];
+      arr[k] = t;
+    }
+
+    return this.viewResolved((items, handleAct) => 
+    {
+      const indices: number[] = [];
+      const n = items.length;
+
+      for (let i = 0; i < n; i++)
+      {
+        indices.push(i);
+      }
+
+      for (let pass = 0; pass < passes; pass++)
+      {
+        for (let k = 0; k < n; k++)
+        {
+          const j = Math.floor(Math.random() * n);
+          swap(items, j, k);
+          swap(indices, j, k);
+        }
+      }
+
+      for (let i = 0; i < n; i++)
+      {
+        if (handleAct(items[i], indices[i]) === IterateAction.STOP)
         {
           return;
         }

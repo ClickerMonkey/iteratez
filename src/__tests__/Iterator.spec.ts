@@ -310,6 +310,14 @@ describe('Iterate', () => {
     expect( b.list() ).toEqual( [1, 0, 2, 3, 0, 0, 0, 3, 0, 0] );
   });
 
+  it('shuffle', () =>
+  {
+    const a = [1, 2, 3, 4, 5, 6, 7];
+    const b = Iterate.array(a);
+
+    expect( b.shuffle().list() ).not.toEqual(a);
+  })
+
   it('sub', () =>
   {
     const a = Iterate.array([1, 2, 3, 4, 5, 6, 7, 8]);

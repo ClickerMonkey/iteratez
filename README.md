@@ -13,7 +13,7 @@ The iterator is lazy, so you can chain "views" and iteration is not done until y
 - If the underlying source supports it, remove an item.
 - If the underlying source supports it, replace an item.
 - You can chain "views" which don't cause iteration until an "operation" or "modifier" are called.
-  - `where` `not` `map` `reverse` `exclude` `intersect` `sorted` `unique` `duplicates` `take` `skip` `drop` `append` `prepend` `gt` `gte` `lt` `lte` `sub` `readonly` `split`
+  - `where` `not` `map` `reverse` `exclude` `intersect` `sorted` `unique` `duplicates` `take` `skip` `drop` `append` `prepend` `gt` `gte` `lt` `lte` `sub` `readonly` `split` `shuffle`
 - You can call "modifiers" to affect the underlying source.
   - `erase` `overwrite` `extract`
 - You can call "operations" to iterate and produce a result.
@@ -109,6 +109,7 @@ source.reverse(); // items in reverse
 source.exclude(anotherSource); // not shared items
 source.intersect(anotherSource); // shared items
 source.sorted(comparator?); // sorted by a comparator
+source.shuffle(); // randomly orders
 source.unique(equality?); // unique items only
 source.duplicates(onlyOnce?); // duplicate items only
 source.take(10); // first 10 items
