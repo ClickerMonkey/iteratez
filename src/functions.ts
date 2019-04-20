@@ -52,6 +52,13 @@ export function iterate<T, K, S> (s: any): Iterate<T, K, S>
   }
 }
 
+/**
+ * Determines whether the given variable is a function.
+ */
+export function isFunction(x: any): x is (...args: any[]) => any
+{
+  return typeof x === 'function';
+}
 
 /**
  * A helper comparison function for two unknown variables. If they both 
@@ -119,8 +126,118 @@ export function equals<T, K> (a: any, b: any, correctType: (x: any) => any, equa
 }
 
 /**
+ * The default comparison function. If the types are not comparable, an 
+ * error is thrown notifying the user that they need to set their own 
+ * comparator.
+ * 
+ * @param a The first value to compare.
+ * @param b The second value.
+ */
+export function defaultCompare (a: any, b: any, forEquals: boolean = false): number
+{
+  const anull = (a === null || a === undefined);
+  const bnull = (b === null || b === undefined);
+
+  if (anull !== bnull)
+  {
+    return anull ? 1 : -1;
+  }
+  else if (anull)
+  {
+    return 0;
+  }
+
+  const atype = typeof a;
+  const btype = typeof b;
+
+  if (atype !== btype)
+  {
+    if (forEquals)
+    {
+      return -1;
+    }
+
+    throw new Error('You must implement your own comparator for unknown or mixed values.');
+  }
+
+  if (atype === 'string')
+  {
+    return a.localeCompare(b);
+  }
+  if (atype === 'number')
+  {
+    return a - b;
+  }
+  if (atype === 'boolean')
+  {
+    return (a ? 1 : 0) - (b ? 1 : 0);
+  }
+  if (a instanceof Date && b instanceof Date)
+  {
+    return a.getTime() - b.getTime();
+  }
+  
+  if (!forEquals)
+  {
+    throw new Error('You must implement your own comparator for unknown or mixed values.');
+  }
+
+  if (a instanceof Array)
+  {
+    let d = a.length - b.length;
+
+    if (d !== 0)
+    {
+      return d;
+    }
+
+    for (let i = 0; i < a.length; i++)
+    {
+      d = defaultCompare(a[i], b[i], forEquals);
+
+      if (d !== 0)
+      {
+        return d;
+      }
+    }
+
+    return 0;
+  }
+
+  if (atype === 'object')
+  {
+    for (const prop in a)
+    {
+      if (!(prop in b))
+      {
+        return -1;
+      }
+    }
+
+    for (const prop in b)
+    {
+      if (!(prop in a))
+      {
+        return -1;
+      }
+
+      const d = defaultCompare(a[prop], b[prop], forEquals);
+      
+      if (d !== 0)
+      {
+        return d;
+      }
+    }
+  }
+
+  return 0;
+}
+
+/**
  * Creates a number comparator.
  * 
+ * @param ascending If the numbers should be in ascending order.
+ * @param nullsFirst If non-numbers values should be ordered first.
  */
 export function getNumberComparator<K> (ascending: boolean = true, nullsFirst: boolean = false): IterateCompare<number, K>
 {
@@ -184,12 +301,4 @@ export function getDateEquality<K> (equalityTimespan: number = 1, utc: boolean =
   const equality: IterateEquals<Date, K> = (a, b) => (getTime(a) % equalityTimespan) === (getTime(b) % equalityTimespan);
 
   return (a, b) => equals<Date, K>(a, b, isType, equality);
-}
-
-/**
- * Determines whether the given variable is a function.
- */
-export function isFunction(x: any): x is (...args: any[]) => any
-{
-  return typeof x === 'function';
 }

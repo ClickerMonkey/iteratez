@@ -600,6 +600,11 @@ describe('Iterate', () => {
     expect( fn(['apple', 'bit'], 'b') ).toEqual(['apple', 'BIT']);
   });
 
+  it('default comparator', () => 
+  {
+    expect( Iterate.array([8, 7, 3, 4, 5, 6]).skip(2).max() ).toEqual( 6 );
+  })
+
   interface Node<T> {
     value: T;
     next?: Node<T>;

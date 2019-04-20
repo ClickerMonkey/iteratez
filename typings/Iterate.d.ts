@@ -92,13 +92,6 @@ import { GetKeyFor, GetValueFor, HasEntries, IterateCallback, IterateCompare, It
  */
 export declare class Iterate<T, K, S> {
     /**
-     * An equality check by reference.
-     */
-    static EQUALS_STRICT: IterateEquals<any, any>;
-    /**
-     * An equality check by value.
-     */ static EQUALS_LOOSE: IterateEquals<any, any>;
-    /**
      * A result of the iteration passed to [[Iterate.stop]].
      */
     result: any;

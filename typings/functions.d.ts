@@ -33,6 +33,10 @@ export declare function iterate<T>(object: {
 export declare function iterate<T>(empty?: null): Iterate<any, any, any>;
 export declare function iterate<T>(value: T): Iterate<T, number, [T]>;
 /**
+ * Determines whether the given variable is a function.
+ */
+export declare function isFunction(x: any): x is (...args: any[]) => any;
+/**
  * A helper comparison function for two unknown variables. If they both
  * aren't the correct type the are considered equal. If one doesn't have the
  * correct type then the `nullsFirst` variable is used to determine which
@@ -60,8 +64,19 @@ export declare function compare<T, K>(ascending: boolean, nullsFirst: boolean, a
  */
 export declare function equals<T, K>(a: any, b: any, correctType: (x: any) => any, equality: IterateEquals<T, K>): boolean;
 /**
+ * The default comparison function. If the types are not comparable, an
+ * error is thrown notifying the user that they need to set their own
+ * comparator.
+ *
+ * @param a The first value to compare.
+ * @param b The second value.
+ */
+export declare function defaultCompare(a: any, b: any, forEquals?: boolean): number;
+/**
  * Creates a number comparator.
  *
+ * @param ascending If the numbers should be in ascending order.
+ * @param nullsFirst If non-numbers values should be ordered first.
  */
 export declare function getNumberComparator<K>(ascending?: boolean, nullsFirst?: boolean): IterateCompare<number, K>;
 /**
@@ -92,7 +107,3 @@ export declare function getDateComparator<K>(ascending?: boolean, nullsFirst?: b
  *    on their timezone.
  */
 export declare function getDateEquality<K>(equalityTimespan?: number, utc?: boolean): IterateEquals<Date, K>;
-/**
- * Determines whether the given variable is a function.
- */
-export declare function isFunction(x: any): x is (...args: any[]) => any;

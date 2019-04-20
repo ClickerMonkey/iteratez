@@ -1,4 +1,4 @@
-import { getDateComparator, getDateEquality, getNumberComparator, getStringComparator, isFunction, iterate } from './functions';
+import { getDateComparator, getDateEquality, getNumberComparator, getStringComparator, isFunction, iterate, defaultCompare } from './functions';
 import { IterateAction } from "./IterateAction";
 import { GetKeyFor, GetValueFor, HasEntries, IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateFunction, IterateFunctionExecute, IterateResult, IterateSource, IterateSourceType, IterateSourceTypeKey } from "./types";
 
@@ -95,16 +95,6 @@ import { GetKeyFor, GetValueFor, HasEntries, IterateCallback, IterateCompare, It
  */
 export class Iterate<T, K, S>
 {
-
-  /**
-   * An equality check by reference.
-   */
-  public static EQUALS_STRICT: IterateEquals<any, any> = (a, b) => a === b;
-
-  /**
-   * An equality check by value.
-   */ // tslint:disable-next-line: triple-equals
-  public static EQUALS_LOOSE: IterateEquals<any, any> = (a, b) => a == b;
 
   /**
    * A result of the iteration passed to [[Iterate.stop]].
@@ -343,7 +333,7 @@ export class Iterate<T, K, S>
    */
   public getEquality (equalityOverride?: IterateEquals<T, K>): IterateEquals<T, K>
   {
-    return equalityOverride || this.equality || Iterate.EQUALS_STRICT;
+    return equalityOverride || this.equality || ((a, b) => defaultCompare(a, b, true) === 0);
   }
 
   /**
@@ -354,14 +344,7 @@ export class Iterate<T, K, S>
    */
   public getComparator (comparatorOverride?: IterateCompare<T, K>): IterateCompare<T, K>
   {
-    const chosen = comparatorOverride || this.comparator;
-
-    if (!chosen)
-    {
-      throw new Error('A comparator is required for the requested action');
-    }
-
-    return chosen;
+    return comparatorOverride || this.comparator || ((a, b) => defaultCompare(a, b, false));
   }
 
   /**
