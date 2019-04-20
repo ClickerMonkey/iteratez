@@ -31,7 +31,7 @@ export declare function iterate<T>(object: {
     [key: string]: T;
 }>;
 export declare function iterate<T>(empty?: null): Iterate<any, any, any>;
-export declare function iterate<T>(item: T): Iterate<T, number, [T]>;
+export declare function iterate<T>(value: T): Iterate<T, number, [T]>;
 /**
  * A helper comparison function for two unknown variables. If they both
  * aren't the correct type the are considered equal. If one doesn't have the

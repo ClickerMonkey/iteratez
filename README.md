@@ -12,8 +12,8 @@ The iterator is lazy, so you can chain "views" and iteration is not done until y
 - Iteration is lazy, so iteration is only done when it absolutely needs to be.
 - Some [operations](#operations) can exit early and cease iteration saving time and resources.
 - When iterating, you can stop at any time.
-- If the underlying source supports it, [remove](#mutations) an item.
-- If the underlying source supports it, [replace](#mutations) an item.
+- If the underlying source supports it, [remove](#mutations) a value.
+- If the underlying source supports it, [replace](#mutations) a value.
 - You can chain [views](#views) which don't cause iteration until an [operation](#operations) or [mutation](#mutations) are called.
 - You can call [mutations](#mutations) to affect the underlying source.
 - You can call [operations](#operations) to iterate and produce a result.
@@ -24,58 +24,58 @@ You can see all of these features in the [examples](#examples) below.
 
 ### Views
 Returns an iterator...
-- `where`: for a subset of the items.
-- `not`: for a subset of the items that don't pass test (opposite of where).
-- `transform`: that transforms the items to another type.
-- `reverse`: that iterates over the items in reverse order.
-- `exclude`: that excludes items found in another iterator.
-- `intersect`: that has common items in another iterator.
+- `where`: for a subset of the values.
+- `not`: for a subset of the values that don't pass test (opposite of where).
+- `transform`: that transforms the values to another type.
+- `reverse`: that iterates over the values in reverse order.
+- `exclude`: that excludes values found in another iterator.
+- `intersect`: that has common values in another iterator.
 - `sorted`: that is sorted based on some comparison.
 - `shuffle`: that is randomly ordered.
 - `unique`: that has only unique values.
 - `duplicates`: that has all the duplicate values.
 - `readonly`: that ignores mutations.
-- `keys`: only for the keys of the items (replace not supported).
-- `values`: only for the values of the items (new key is index based).
-- `take`: that only iterates over the first X items.
-- `skip`: that skips the first X items.
-- `drop`: that drops off the last X items.
+- `keys`: only for the keys of the values (replace not supported).
+- `values`: only for the values (new key is index based).
+- `take`: that only iterates over the first X values.
+- `skip`: that skips the first X values.
+- `drop`: that drops off the last X values.
 - `append`: that is the original iterator + one or more iterators specified.
 - `prepend`: that is one or more iterators specified + the original iterator.
-- `gt`: that only has items greater than a value.
-- `gte`: that only has items greater than or equal to a value.
-- `lt`: that only has items less than a value.
-- `lte`: that only has items less than or equal to a value.
+- `gt`: that only has values greater than a value.
+- `gte`: that only has values greater than or equal to a value.
+- `lt`: that only has values less than a value.
+- `lte`: that only has values less than or equal to a value.
 - `fork`: that is this, but allows a function to perform fork operations
-- `split`: Splits the items into two iterators (pass/fail) based on a condition.
+- `split`: Splits the values into two iterators (pass/fail) based on a condition.
 - `unzip`: Splits the view into two iterates (keys/values).
 
 ### Mutations
-- `delete`: Removes items in the view from the source.
-- `overwrite`: Replaces items in the view from the source.
-- `extract`: Removes items in the view from the source and returns a new iterator with the removed items.
+- `delete`: Removes values in the view from the source.
+- `overwrite`: Replaces values in the view from the source.
+- `extract`: Removes values in the view from the source and returns a new iterator with the removed values.
 
 ### Operations
-- `empty`: Determines if view contains zero items.
-- `has`: Determines if the view contains any items.
-- `contains`: Determines if the view contains a specific item.
-- `first`: Gets the first item in the view.
-- `last`: Gets the last item in the view.
-- `count`: Counts the number of items in the view.
-- `array`: Builds an array of the items in the view.
-- `set`: Builds a Set of the items in the view.
-- `object`: Builds an object of the items in the view.
+- `empty`: Determines if view contains zero values.
+- `has`: Determines if the view contains any values.
+- `contains`: Determines if the view contains a specific value.
+- `first`: Gets the first value in the view.
+- `last`: Gets the last value in the view.
+- `count`: Counts the number of values in the view.
+- `array`: Builds an array of the values in the view.
+- `set`: Builds a Set of the values in the view.
+- `object`: Builds an object of the values in the view.
 - `entries`: Builds an array of `[key, value]` in the view.
-- `map`: Builds a Map of the items and keys in the view.
-- `group`: Builds an object of item arrays grouped by a value derived from each item.
-- `reduce`: Reduces the items in the view down to a single value.
-- `min`: Returns the minimum item in the view.
-- `max`: Returns the maximum item in the view.
-- `iterate`: Invokes a function for each item in the view.
-- `copy`: Copies the items in the view and returns a new iterator.
+- `map`: Builds a Map of the values and keys in the view.
+- `group`: Builds an object of value arrays grouped by a value derived from each value.
+- `reduce`: Reduces the values in the view down to a single value.
+- `min`: Returns the minimum value in the view.
+- `max`: Returns the maximum value in the view.
+- `iterate`: Invokes a function for each value in the view.
+- `copy`: Copies the values in the view and returns a new iterator.
 
 ### Comparison Logic
-The following chainable functions define how items should be compared.
+The following chainable functions define how values should be compared.
 
 - `numbers`: Set number comparison logic to the iterator.
 - `strings`: Set string comparison logic to the iterator.
@@ -125,8 +125,8 @@ let source = yourSource.yourIteratorGenerator();
 // ============ ITERATION ============ 
 
 // Stop
-source.each((item, itemKey, iter) => {
-  if (someCondition(item)) {
+source.each((value, key, iter) => {
+  if (someCondition(value)) {
     iter.stop(42)
   }
 }).withResult((result) => {
@@ -138,15 +138,15 @@ source.each((item, itemKey, iter) => {
 // - if the source is a sequential collection, it's removed from the sequence (array, object, etc)
 // - if the source is a tree, it removes it from the tree including it's children
 // - otherwise, up to the custom source
-source.each((item, itemKey, iter) => {
-  if (someCondition(item)) {
+source.each((value, key, iter) => {
+  if (someCondition(value)) {
     iter.remove();
   }
 });
 
 // Replace
-source.each((item, itemKey, iter) => {
-  if (someCondition(item)) {
+source.each((value, key, iter) => {
+  if (someCondition(value)) {
     iter.replace(replacement);
   }
 });
@@ -163,11 +163,11 @@ let count = source.count(); // number
 let array = source.array(); // T[]
 let array = source.array(dest); // T[]
 let set = source.set(); // Set<T>
-let object = source.object(item => item.id); // { [item.id]: item }
-let object = source.object(item => item.id, dest);
+let object = source.object(value => value.id); // { [value.id]: value }
+let object = source.object(value => value.id, dest);
 let entries = source.entries(): // Array<[K, T]>
 let map = source.map(); // Map<T, K>
-let group = source.group(item => item.age); // { [age]: T[] }
+let group = source.group(value => value.age); // { [age]: T[] }
 let reduced = source.reduce(R, (T, R) => R); // R
 let min = source.min(); // T
 let max = source.max(); // T
@@ -175,45 +175,45 @@ let copy = source.copy(): // Iterate<T>
 
 // ============ Mutations ============ 
 // These are at the end of a chain of views and they
-// take the items in the current iterator and affects the
+// take the values in the current iterator and affects the
 // underlying source.
 
-source.delete(); // removes all items in iterator
-source.where(x => x.id).delete(); // remove items without an ID
+source.delete(); // removes all values in iterator
+source.where(x => x.id).delete(); // remove values without an ID
 
-source.extract(); // does a delete and returns a new iterator with the removed items
+source.extract(); // does a delete and returns a new iterator with the removed values
 
-source.overwrite(42); // replaces all items in iterator
+source.overwrite(42); // replaces all values in iterator
 source.where(x => x > 34).overwrite(12); // replace all numbers over 34 with 12
 
 // ============ Views ============ 
 // These are chainable, at the end if you call an operation it performs
-// it only on the items in the iterator at that point. If you call
+// it only on the values in the iterator at that point. If you call
 // a mutation then it changes the underlying source but only on the
-// items in the view.
+// values in the view.
 
-source.where(x => x.age > 0); // items that past test
-source.not(x => x.age > 0); // items that don't pass test
-source.transform(x => x.name); // items transformed to a new type
-source.reverse(); // items in reverse
-source.exclude(anotherSource); // not shared items
-source.intersect(anotherSource); // shared items
+source.where(x => x.age > 0); // values that past test
+source.not(x => x.age > 0); // values that don't pass test
+source.transform(x => x.name); // values transformed to a new type
+source.reverse(); // values in reverse
+source.exclude(anotherSource); // not shared values
+source.intersect(anotherSource); // shared values
 source.sorted(comparator?); // sorted by a comparator
 source.shuffle(times?); // randomly orders
-source.unique(equality?); // unique items only
-source.duplicates(onlyOnce?); // duplicate items only
+source.unique(equality?); // unique values only
+source.duplicates(onlyOnce?); // duplicate values only
 source.readonly(); // all subsequent mutations are ignored
 source.keys(); // just the keys (index based), delete mutation works
 source.values(); // just the values (index based)
-source.take(10); // first 10 items
-source.skip(5); // after first 5 items
+source.take(10); // first 10 values
+source.skip(5); // after first 5 values
 source.drop(3); // ignore last 3
 source.append(anotherSource); // union of two
 source.prepend(anotherSource); // union in reverse order
-source.gt(value, comparator?); // all items greater than value
-source.gte(value, comparator?); // all items greater/equal to value
-source.lt(value, comparator?); // all items less than value
-source.lte(value, comparator?); // all items less/equal to value
+source.gt(value, comparator?); // all values greater than value
+source.gte(value, comparator?); // all values greater/equal to value
+source.lt(value, comparator?); // all values less than value
+source.lte(value, comparator?); // all values less/equal to value
 source.fork(f => f.where(x => !!x.male).delete()); // fork operation
 source.split(x => x.male); // { pass, fail }
 source.split(x => x.male, (pass, fail) => {}): // two iterators
@@ -246,11 +246,11 @@ source.sorted().skip(5).take(10).array(); // sort, get 5->15 as array
 
 // Map to a new iterator, but support replacement
 source.transform<string>(
-  // transforms items to new type
-  item => item.name, 
-  // if replace is called un a subsequent iteration, how do we take the transformed value and apply it back to the original item?         
-  (replaceWith, current, item) => {
-    item.name = replaceWith;
+  // transforms values to new type
+  value => value.name, 
+  // if replace is called un a subsequent iteration, how do we take the transformed value and apply it back to the original value?         
+  (replaceWith, current, value) => {
+    value.name = replaceWith;
   }
 ).each((name, key, iter) => {
   // Make all names uppercase in the most obtuse way possible
@@ -258,7 +258,7 @@ source.transform<string>(
 });
 
 // Iterate with a callback
-source.each((item, key, iter) => {
+source.each((value, key, iter) => {
   // iter.remove();
   // iter.stop(withResult);
   // iter.replace(newValue);
@@ -395,7 +395,7 @@ function getDateIterator ([start, max]: DateRange)
   return new Iterate<Date, number, DateRange>(iter => 
   {
     // This function is called when an operation or mutation is called on iter
-    // You should iterate over your items and respond to the action requested
+    // You should iterate over your values and respond to the action requested
     // In this example, if iterateNode returns false, stop all iteration
     const curr = new Date(start.getTime());
 

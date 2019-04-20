@@ -7,7 +7,7 @@ import { GetKeyFor, GetValueFor, HasEntries, IterateCallback, IterateCompare, It
  * A class that allows an iteratable source to be iterated any number of times.
  *
  * There are 3 types of functions in an Iterate:
- * - **Operation**: produces a result from the items in the iterator.
+ * - **Operation**: produces a result from the values in the iterator.
  * - **View**: produces a new iterator, the original iterator is not affected.
  * - **Mutation**: modifies the source based on the values in the current iterator.
  * 
@@ -16,55 +16,55 @@ import { GetKeyFor, GetValueFor, HasEntries, IterateCallback, IterateCompare, It
  * **Mutation** function are called on it.
  * 
  * **Operations**
- * - `empty`: Determines whether the view contains no items.
- * - `has`: Determines whether the view contains any items.
- * - `contains`: Determines if the view contains a specific item.
- * - `first`: Gets the first item in the view.
- * - `last`: Gets the last item in the view.
- * - `count`: Counds the number of items in the view.
- * - `array`: Builds an array of the items in the view.
- * - `set`: Builds a Set of the items in the view.
- * - `object`: Builds an object of the items in the view.
+ * - `empty`: Determines whether the view contains no values.
+ * - `has`: Determines whether the view contains any values.
+ * - `contains`: Determines if the view contains a specific value.
+ * - `first`: Gets the first value in the view.
+ * - `last`: Gets the last value in the view.
+ * - `count`: Counds the number of values in the view.
+ * - `array`: Builds an array of the values in the view.
+ * - `set`: Builds a Set of the values in the view.
+ * - `object`: Builds an object of the values in the view.
  * - `entries`: Builds an array of `[key, value]` in the view.
- * - `map`: Builds a Map of the items and keys in the view.
- * - `group`: Builds an object of item arrays grouped by a value derived from each item.
- * - `reduce`: Reduces the items in the view down to a single value.
- * - `min`: Returns the minimum item in the view.
- * - `max`: Returns the maximum item in the view.
- * - `each`: Invokes a function for each item in the view.
- * - `copy`: Copies the items in the view and returns a new iterator.
+ * - `map`: Builds a Map of the values and keys in the view.
+ * - `group`: Builds an object of value arrays grouped by a value derived from each value.
+ * - `reduce`: Reduces the values in the view down to a single value.
+ * - `min`: Returns the minimum value in the view.
+ * - `max`: Returns the maximum value in the view.
+ * - `each`: Invokes a function for each value in the view.
+ * - `copy`: Copies the values in the view and returns a new iterator.
  * 
  * **Mutations**
- * - `delete`: Removes items in the view from the source.
- * - `overwrite`: Replaces items in the view from the source.
- * - `extract`: Removes items in the view from the source and returns a new iterator with the removed items.
+ * - `delete`: Removes values in the view from the source.
+ * - `overwrite`: Replaces values in the view from the source.
+ * - `extract`: Removes values in the view from the source and returns a new iterator with the removed values.
  * 
  * **Views**
  * Returns an iterator...
- * - `where`: for a subset of the items.
- * - `not`: for a subset of the items (opposite of where).
- * - `transform`: that transforms the items to another type.
- * - `reverse`: that iterates over the items in reverse order.
- * - `exclude`: that excludes items found in another iterator.
- * - `intersect`: that has common items in another iterator.
+ * - `where`: for a subset of the values.
+ * - `not`: for a subset of the values (opposite of where).
+ * - `transform`: that transforms the values to another type.
+ * - `reverse`: that iterates over the values in reverse order.
+ * - `exclude`: that excludes values found in another iterator.
+ * - `intersect`: that has common values in another iterator.
  * - `sorted`: that is sorted based on some comparison.
  * - `shuffle`: that is randomly ordered.
  * - `unique`: that has only unique values.
  * - `duplicates`: that has all the duplicate values.
  * - `readonly`: that ignores mutations.
- * - `keys`: only for the keys of the items (replace not supported).
- * - `values`: only for the values of the items (new key is index based).
- * - `take`: that only iterates over the first X items.
- * - `skip`: that skips the first X items.
- * - `drop`: that drops off the last X items.
+ * - `keys`: only for the keys of the values (replace not supported).
+ * - `values`: only for the values of the values (new key is index based).
+ * - `take`: that only iterates over the first X values.
+ * - `skip`: that skips the first X values.
+ * - `drop`: that drops off the last X values.
  * - `append`: that is the original iterator + one or more iterators specified.
  * - `prepend`: that is one or more iterators specified + the original iterator.
- * - `gt`: that only has items greater than a value.
- * - `gte`: that only has items greater than or equal to a value.
- * - `lt`: that only has items less than a value.
- * - `lte`: that only has items less than or equal to a value.
+ * - `gt`: that only has values greater than a value.
+ * - `gte`: that only has values greater than or equal to a value.
+ * - `lt`: that only has values less than a value.
+ * - `lte`: that only has values less than or equal to a value.
  * - `fork`: that is this, but allows a function to perform fork operations
- * - `split`: Splits the items into two iterators (pass/fail) based on a condition.
+ * - `split`: Splits the values into two iterators (pass/fail) based on a condition.
  * - `unzip`: Splits the view into two iterates (keys/values).
  * 
  * The following functions are used to control comparison logic
@@ -91,7 +91,7 @@ import { GetKeyFor, GetValueFor, HasEntries, IterateCallback, IterateCompare, It
  * - `entries`: Iterates an array of `[key, value]` entries.
  * - `zip`: Combines a key iterator and value iterator into one.
  *
- * @typeparam T The type of item being iterated.
+ * @typeparam T The type of value being iterated.
  */
 export class Iterate<T, K, S>
 {
@@ -117,7 +117,7 @@ export class Iterate<T, K, S>
   public action: IterateAction;
 
   /**
-   * The value to replace with the current item.
+   * The value to replace with the current value.
    */
   public replaceWith: T;
 
@@ -127,8 +127,8 @@ export class Iterate<T, K, S>
   public callback: IterateCallback<T, K, S, any>;
 
   /**
-   * The source of iterable items. This allows the iteration over any type of
-   * structure. The source must call the callback for each item and its
+   * The source of iterable values. This allows the iteration over any type of
+   * structure. The source must call the callback for each value and its
    * recommended that the source checks the [[Iterate.iterating]] flag after
    * each callback invokation.
    */
@@ -147,7 +147,7 @@ export class Iterate<T, K, S>
   /**
    * Creates a new Iterate given a source.
    *
-   * @param source The source of items to iterator.
+   * @param source The source of values to iterator.
    */
   public constructor (source: IterateSource<T, K, S>, parent?: Iterate<T, any, any>)
   {
@@ -171,17 +171,17 @@ export class Iterate<T, K, S>
   }
 
   /**
-   * Passes the given item to the iterator callback and returns the action
+   * Passes the given value to the iterator callback and returns the action
    * requested at this point in iteration.
    *
-   * @param item The current item being iterated.
+   * @param value The current value being iterated.
    */
-  public act (item: T, key: K): IterateAction
+  public act (value: T, key: K): IterateAction
   {
     this.action = IterateAction.CONTINUE;
     this.replaceWith = null;
 
-    this.callback( item, key, this );
+    this.callback( value, key, this );
 
     return this.action;
   }
@@ -221,7 +221,7 @@ export class Iterate<T, K, S>
   }
 
   /**
-   * Signals to the iterator source that the current item wants to be removed.
+   * Signals to the iterator source that the current value wants to be removed.
    */
   public remove (): this
   {
@@ -373,13 +373,13 @@ export class Iterate<T, K, S>
   public empty (setResult: IterateResult<boolean>): this
   public empty (setResult?: IterateResult<boolean>): boolean | this
   {
-    const result = !this.each((item, key, iterator) => iterator.stop()).isStopped();
+    const result = !this.each((value, key, iterator) => iterator.stop()).isStopped();
 
     return setResult ? (setResult(result) ? this : this) : result;
   }
 
   /**
-   * An operation that determines whether this iterator has an item. 
+   * An operation that determines whether this iterator has a value. 
    *
    * @param setResult A function to pass the result to.
    */
@@ -387,7 +387,7 @@ export class Iterate<T, K, S>
   public has (setResult: IterateResult<boolean>): this
   public has (setResult?: IterateResult<boolean>): boolean | this
   {
-    const result = this.each((item, key, iterator) => iterator.stop()).isStopped();
+    const result = this.each((value, key, iterator) => iterator.stop()).isStopped();
 
     return setResult ? (setResult(result) ? this : this) : result;
   }
@@ -403,13 +403,13 @@ export class Iterate<T, K, S>
   public contains (value: T, setResult?: IterateResult<boolean>): boolean | this
   {
     const equality = this.getEquality();
-    const result = this.where((other, otherKey) => equality(value, other, undefined, otherKey)).has();
+    const result = this.where((other, otherKey) => equality(other, value, otherKey)).has();
 
     return setResult ? (setResult(result) ? this : this) : result;
   }
 
   /**
-   * An operation that counts the number of items in the iterator.
+   * An operation that counts the number of values in the iterator.
    *
    * @param setResult A function to pass the count to.
    */
@@ -425,7 +425,7 @@ export class Iterate<T, K, S>
   }
 
   /**
-   * An operation that returns the first item in the iterator. 
+   * An operation that returns the first value in the iterator. 
    *
    * @param setResult A function to pass the first value to.
    */
@@ -433,13 +433,13 @@ export class Iterate<T, K, S>
   public first (setResult: IterateResult<T>): this
   public first (setResult?: IterateResult<T>): T | this
   {
-    const result = this.each((item, key, iterator) => iterator.stop(item)).result;
+    const result = this.each((value, key, iterator) => iterator.stop(value)).result;
 
     return setResult ? (setResult(result) ? this : this) : result;
   }
 
   /**
-   * An operation that returns the last item in the iterator.
+   * An operation that returns the last value in the iterator.
    *
    * @param setResult A function to pass the last value to.
    */
@@ -449,15 +449,15 @@ export class Iterate<T, K, S>
   {
     let result: T = null;
 
-    this.each(item => result = item);
+    this.each(value => result = value);
 
     return setResult ? (setResult(result) ? this : this) : result;
   }
 
   /**
-   * An operation that builds an array of items from the source.
+   * An operation that builds an array of values from the source.
    *
-   * @param out The array to place the items in.
+   * @param out The array to place the values in.
    * @param setResult A function to pass the array to.
    */
   public array (out?: T[]): T[]
@@ -468,13 +468,13 @@ export class Iterate<T, K, S>
     const result = isFunction(outOrResult) ? [] : outOrResult;
     const setResult = isFunction(outOrResult) ? outOrResult : onResult;
 
-    this.each(item => result.push( item ));
+    this.each(value => result.push( value ));
 
     return setResult ? (setResult(result) ? this : this) : result;
   }
 
   /**
-   * An operation that builds an array of [key, item] entries from this view.
+   * An operation that builds an array of [key, value] entries from this view.
    *
    * @param out The array to place the entries in.
    * @param setResult A function to pass the entries to.
@@ -487,36 +487,36 @@ export class Iterate<T, K, S>
     const result = isFunction(outOrResult) ? [] : outOrResult;
     const setResult = isFunction(outOrResult) ? outOrResult : onResult;
 
-    this.each((item, itemKey) => result.push([itemKey, item]));
+    this.each((value, key) => result.push([key, value]));
 
     return setResult ? (setResult(result) ? this : this) : result;
   }
 
   /**
-   * An operation that builds an object of items from the iterator keyed by a 
+   * An operation that builds an object of values from the iterator keyed by a 
    * result returned by a `getKey` function.
    *
    * @param getKey The function which returns the key of the object.
-   * @param out The object to place the items in.
+   * @param out The object to place the values in.
    * @param setResult A function to pass the object to.
    */
-  public object<O = { [key: string]: T }> (getKey: (item: T) => keyof O, out?: O): O
-  public object<O = { [key: string]: T }> (getKey: (item: T) => keyof O, out: O, setResult: IterateResult<O>): this
-  public object<O = { [key: string]: T }> (getKey: (item: T) => keyof O, setResult: IterateResult<O>): this
-  public object<O = { [key: string]: T }> (getKey: (item: T) => keyof O, outOrResult: O | IterateResult<O> = Object.create(null), onResult?: IterateResult<O>): O | this
+  public object<O = { [key: string]: T }> (getKey: (value: T) => keyof O, out?: O): O
+  public object<O = { [key: string]: T }> (getKey: (value: T) => keyof O, out: O, setResult: IterateResult<O>): this
+  public object<O = { [key: string]: T }> (getKey: (value: T) => keyof O, setResult: IterateResult<O>): this
+  public object<O = { [key: string]: T }> (getKey: (value: T) => keyof O, outOrResult: O | IterateResult<O> = Object.create(null), onResult?: IterateResult<O>): O | this
   {
     const result = isFunction(outOrResult) ? Object.create(null) : outOrResult;
     const setResult = isFunction(outOrResult) ? outOrResult : onResult;
 
-    this.each(item => result[ getKey( item ) as string ] = item);
+    this.each(value => result[ getKey( value ) as string ] = value);
 
     return setResult ? (setResult(result) ? this : this) : result;
   }
 
   /**
-   * An operation that builds a Set of items from the source.
+   * An operation that builds a Set of values from the source.
    *
-   * @param out The Set to place the items in.
+   * @param out The Set to place the values in.
    * @param setResult A function to pass the set to.
    */
   public set (out?: Set<T>): Set<T>
@@ -527,7 +527,7 @@ export class Iterate<T, K, S>
     const result = isFunction(outOrResult) ? new Set() : outOrResult;
     const setResult = isFunction(outOrResult) ? outOrResult : onResult;
 
-    this.each(item => result.add( item ));
+    this.each(value => result.add( value ));
 
     return setResult ? (setResult(result) ? this : this) : result;
   }
@@ -535,7 +535,7 @@ export class Iterate<T, K, S>
   /**
    * An operation that builds a Map of key-value pairs from the source.
    *
-   * @param out The Map to place the items in.
+   * @param out The Map to place the values in.
    * @param setResult A function to pass the map to.
    */
   public map (out?: Map<K, T>): Map<K, T>
@@ -546,38 +546,38 @@ export class Iterate<T, K, S>
     const result = isFunction(outOrResult) ? new Map() : outOrResult;
     const setResult = isFunction(outOrResult) ? outOrResult : onResult;
 
-    this.each((item, itemKey) => result.set(itemKey, item));
+    this.each((value, key) => result.set(key, value));
 
     return setResult ? (setResult(result) ? this : this) : result;
   }
 
   /**
-   * An operation that returns an object with arrays of items where the 
+   * An operation that returns an object with arrays of values where the 
    * property of the object is a key returned by a function.
    * 
-   * @param by A function to get the key from an item.
+   * @param by A function to get the key from a value.
    * @param out The object to add groups to.
    * @param setResult A function to pass the groups to.
    */
-  public group<G extends { [by: string]: T[] }> (by: (item: T) => any, out?: G): G
-  public group<G extends { [by: string]: T[] }> (by: (item: T) => any, out: G, setResult: IterateResult<G>): this
-  public group<G extends { [by: string]: T[] }> (by: (item: T) => any, setResult: IterateResult<G>): this
-  public group<G extends { [by: string]: T[] }> (by: (item: T) => any, outOrResult: G | IterateResult<G> = Object.create(null), onResult?: IterateResult<G>): G | this
+  public group<G extends { [by: string]: T[] }> (by: (value: T) => any, out?: G): G
+  public group<G extends { [by: string]: T[] }> (by: (value: T) => any, out: G, setResult: IterateResult<G>): this
+  public group<G extends { [by: string]: T[] }> (by: (value: T) => any, setResult: IterateResult<G>): this
+  public group<G extends { [by: string]: T[] }> (by: (value: T) => any, outOrResult: G | IterateResult<G> = Object.create(null), onResult?: IterateResult<G>): G | this
   {
     const result = isFunction(outOrResult) ? Object.create(null) : outOrResult;
     const setResult = isFunction(outOrResult) ? outOrResult : onResult;
 
-    this.each(item => 
+    this.each(value => 
     {
-      const key = by(item);
+      const key = by(value);
 
       if (key in result) 
       {
-        result[key].push(item);
+        result[key].push(value);
       } 
       else 
       {
-        result[key] = [item];
+        result[key] = [value];
       }
     });
 
@@ -585,29 +585,29 @@ export class Iterate<T, K, S>
   }
 
   /**
-   * An operation that reduces all the items in the source to a single value 
-   * given the initial value and a function to convert an item and the current 
+   * An operation that reduces all the values in the source to a single value 
+   * given the initial value and a function to convert a value and the current 
    * reduced value
    * 
    * @param initial The initial value to pass to the `reducer` function the 
    *    first time.
-   * @param reducer A function which takes an item in the iterator and the 
+   * @param reducer A function which takes a value in the iterator and the 
    *    current reduced value and returns a new reduced value.
    * @param setResult A function to pass the reduced value to.
    */
-  public reduce<R> (initial: R, reducer: (item: T, reduced: R) => R): R
-  public reduce<R> (initial: R, reducer: (item: T, reduced: R) => R, setResult: IterateResult<R>): this
-  public reduce<R> (initial: R, reducer: (item: T, reduced: R) => R, setResult?: IterateResult<R>): R | this
+  public reduce<R> (initial: R, reducer: (value: T, reduced: R) => R): R
+  public reduce<R> (initial: R, reducer: (value: T, reduced: R) => R, setResult: IterateResult<R>): this
+  public reduce<R> (initial: R, reducer: (value: T, reduced: R) => R, setResult?: IterateResult<R>): R | this
   {
     let reduced: R = initial;
 
-    this.each(item => reduced = reducer( item, reduced ));
+    this.each(value => reduced = reducer( value, reduced ));
 
     return setResult ? (setResult(reduced) ? this : this) : reduced;
   }
 
   /**
-   * An operation that returns the minimum item in this iterator. If this 
+   * An operation that returns the minimum value in this iterator. If this 
    * iterator is empty null is returned.
    * 
    * @param setResult A function to pass the minimum value to.
@@ -617,13 +617,13 @@ export class Iterate<T, K, S>
   public min (setResult?: IterateResult<T>): T | this
   {
     const compare = this.getComparator();
-    const result = this.reduce<T>(null, (item, min) => min === null || compare(item, min) < 0 ? item : min);
+    const result = this.reduce<T>(null, (value, min) => min === null || compare(value, min) < 0 ? value : min);
 
     return setResult ? (setResult(result) ? this : this) : result;
   }
 
   /**
-   * An operation that returns the maximum item in this iterator. If this 
+   * An operation that returns the maximum value in this iterator. If this 
    * iterator is empty null is returned.
    * 
    * @param setResult A function to pass the maximum value to.
@@ -633,22 +633,22 @@ export class Iterate<T, K, S>
   public max (setResult?: IterateResult<T>): T | this
   {
     const compare = this.getComparator();
-    const result = this.reduce<T>(null, (item, max) => max === null || compare(item, max) > 0 ? item : max);
+    const result = this.reduce<T>(null, (value, max) => max === null || compare(value, max) > 0 ? value : max);
 
     return setResult ? (setResult(result) ? this : this) : result;
   }
 
   /**
-   * A mutation which removes items in this iterator from the source.
+   * A mutation which removes values in this iterator from the source.
    */
   public delete (): this
   {
-    return this.each((item, key, iterator) => iterator.remove());
+    return this.each((value, key, iterator) => iterator.remove());
   }
 
   /**
-   * A mutation which removes items in this iterator from the source and 
-   * returns a new iterator with the removed items.
+   * A mutation which removes values in this iterator from the source and 
+   * returns a new iterator with the removed values.
    */
   public extract (): Iterate<T, K, Array<[K, T]>>
   public extract (setResult: IterateResult<Iterate<T, K, Array<[K, T]>>>): this
@@ -656,7 +656,7 @@ export class Iterate<T, K, S>
   {
     const extracted: Array<[K, T]> = [];
 
-    this.each((item, key, iterator) => extracted.push([key, item]) && iterator.remove());
+    this.each((value, key, iterator) => extracted.push([key, value]) && iterator.remove());
 
     const result = Iterate.entries(extracted);
 
@@ -670,7 +670,7 @@ export class Iterate<T, K, S>
    */
   public overwrite (replacement: T): this
   {
-    return this.each((item, key, iterator) => iterator.replace(replacement));
+    return this.each((value, key, iterator) => iterator.replace(replacement));
   }
 
   /**
@@ -678,16 +678,16 @@ export class Iterate<T, K, S>
    * 
    * @param updater A function which given a value and key returns a replacement value.
    */
-  public update (updater: (item: T, key: K) => T): this
+  public update (updater: (value: T, key: K) => T): this
   {
-    return this.each((item, key, iterator) => iterator.replace(updater(item, key)));
+    return this.each((value, key, iterator) => iterator.replace(updater(value, key)));
   }
 
   /**
    * Forks this view into another and returns a reference to this view.
    * This allows chaining of multiple views which each perform a different
    * operation or mutation. Forks are executed sequentially, so if one fork
-   * performs mutations the subsequent forks will see the mutated items.
+   * performs mutations the subsequent forks will see the mutated values.
    * 
    * @param forker A function which takes the iterator at this point and 
    *    performs any mutations and operations.
@@ -700,8 +700,8 @@ export class Iterate<T, K, S>
   }
 
   /**
-   * Provides split views of the items in this iterator, one iterator gets
-   * passed items and the other iterator gets the failed items.
+   * Provides split views of the values in this iterator, one iterator gets
+   * passed values and the other iterator gets the failed values.
    * 
    * You can pass a function as a second argument which recieves two iterators
    * for pass and fail respectively. This will be returned in that scenario.
@@ -762,9 +762,9 @@ export class Iterate<T, K, S>
     {
       let index = 0;
 
-      this.each((item, itemKey, prev) =>
+      this.each((value, key, prev) =>
       {
-        switch (next.act( itemKey, index++ ))
+        switch (next.act( key, index++ ))
         {
           case IterateAction.STOP:
             prev.stop();
@@ -788,11 +788,11 @@ export class Iterate<T, K, S>
   {
     return new Iterate<T, number, S>(next =>
     {
-      this.each((item, itemKey, prev) =>
+      this.each((value, key, prev) =>
       {
         let index = 0;
 
-        switch (next.act( item, index++ ))
+        switch (next.act( value, index++ ))
         {
           case IterateAction.STOP:
             prev.stop();
@@ -813,25 +813,25 @@ export class Iterate<T, K, S>
    * Returns a view of this iterator. This allows other views to be more DRY.
    * 
    * @param getData Get any necessary data needed for the view.
-   * @param shouldAct Based on the data and the item, should we act on it?
-   * @param afterAct What to do if the item was acted on.
-   * @param afterSkip What to do if the item was NOT acted on.
+   * @param shouldAct Based on the data and the value, should we act on it?
+   * @param afterAct What to do if the value was acted on.
+   * @param afterSkip What to do if the value was NOT acted on.
    */
   public view<D>(
     getData: () => D, 
-    shouldAct: (data: D, item: T, key: K) => any, 
-    afterAct?: (data: D, item: T, key: K, iter: Iterate<T, K, S>) => void, 
-    afterSkip?: (data: D, item: T, key: K, iter: Iterate<T, K, S>) => void): Iterate<T, K, S>
+    shouldAct: (data: D, value: T, key: K) => any, 
+    afterAct?: (data: D, value: T, key: K, iter: Iterate<T, K, S>) => void, 
+    afterSkip?: (data: D, value: T, key: K, iter: Iterate<T, K, S>) => void): Iterate<T, K, S>
   {
     return new Iterate<T, K, S>(next =>
     {
       const data = getData();
 
-      this.each((item, itemKey, prev) =>
+      this.each((value, key, prev) =>
       {
-        if (shouldAct(data, item, itemKey))
+        if (shouldAct(data, value, key))
         {
-          switch (next.act( item, itemKey ))
+          switch (next.act( value, key ))
           {
             case IterateAction.STOP:
               prev.stop();
@@ -846,12 +846,12 @@ export class Iterate<T, K, S>
 
           if (afterAct)
           {
-            afterAct(data, item, itemKey, prev);
+            afterAct(data, value, key, prev);
           }
         }
         else if (afterSkip)
         {
-          afterSkip(data, item, itemKey, prev);
+          afterSkip(data, value, key, prev);
         }
       });
 
@@ -859,9 +859,9 @@ export class Iterate<T, K, S>
   }
 
   /**
-   * Returns a view that only returns a maximum number of items.
+   * Returns a view that only returns a maximum number of values.
    *
-   * @param amount The maximum number of items to return.
+   * @param amount The maximum number of values to return.
    */
   public take (amount: number): Iterate<T, K, S>
   {
@@ -874,15 +874,15 @@ export class Iterate<T, K, S>
       () => ({ amount }),
       (data) => data.amount > 0,
       (data) => data.amount--,
-      (data, item, itemKey, iter) => iter.stop()
+      (data, value, key, iter) => iter.stop()
     );
   }
 
   /**
-   * Returns a view that skips the given number of items from the items
+   * Returns a view that skips the given number of values from the values
    * in this iterator.
    *
-   * @param amount The number of items to skip.
+   * @param amount The number of values to skip.
    */
   public skip (amount: number): Iterate<T, K, S>
   {
@@ -895,10 +895,10 @@ export class Iterate<T, K, S>
   }
 
   /**
-   * Returns a view that drops the given number of items from the end of the
-   * items in this iterator.
+   * Returns a view that drops the given number of values from the end of the
+   * values in this iterator.
    *
-   * @param amount The number of items to drop from the end.
+   * @param amount The number of values to drop from the end.
    */
   public drop (amount: number): Iterate<T, K, S>
   {
@@ -906,8 +906,8 @@ export class Iterate<T, K, S>
   }
 
   /**
-   * Returns a view thats items are the items in this iterator followed
-   * by the items in the given iterators.
+   * Returns a view thats values are the values in this iterator followed
+   * by the values in the given iterators.
    *
    * @param iterators The iterators to append after this one.
    */
@@ -921,8 +921,8 @@ export class Iterate<T, K, S>
   }
 
   /**
-   * Returns a view thats items are the items in the given iterators
-   * followed by the items in this iterator.
+   * Returns a view thats values are the values in the given iterators
+   * followed by the values in this iterator.
    *
    * @param iterators The iterators to prepend before this one.
    */
@@ -936,96 +936,96 @@ export class Iterate<T, K, S>
   }
 
   /**
-   * Returns a view of items in this iterator which pass a `where` function.
+   * Returns a view of values in this iterator which pass a `where` function.
    *
-   * @param where The function which determines if an item should be iterated.
+   * @param where The function which determines if a value should be iterated.
    */
   public where (where: IterateFilter<T, K>): Iterate<T, K, S>
   {
     return this.view<null>(
       () => null,
-      (data, item, itemKey) => where(item, itemKey)
+      (data, value, key) => where(value, key)
     );
   }
 
   /**
-   * Returns a view of items in this iterator which do NOT pass a `not` function.
+   * Returns a view of values in this iterator which do NOT pass a `not` function.
    * 
-   * @param not The function which determines if an item should be iterated.
+   * @param not The function which determines if a value should be iterated.
    */
   public not (not: IterateFilter<T, K>): Iterate<T, K, S>
   {
     return this.view<null>(
       () => null,
-      (data, item, itemKey) => !not(item, itemKey)
+      (data, value, key) => !not(value, key)
     );
   }
 
   /**
-   * Returns a view where all items are greater than the given value.
+   * Returns a view where all values are greater than the given value.
    * If a comparator is not on this iterator or provided an error is thrown.
    * 
-   * @param value The value to compare against.
+   * @param threshold The value to compare against.
    * @param comparator An override for any existing comparison logic.
    */
-  public gt (value: T, comparator?: IterateCompare<T, K>): Iterate<T, K, S>
+  public gt (threshold: T, comparator?: IterateCompare<T, K>): Iterate<T, K, S>
   {
     return this.view<IterateCompare<T, K>>(
       () => this.getComparator(comparator),
-      (compare, item, itemKey) => compare(item, value, itemKey) > 0
+      (compare, value, key) => compare(value, threshold, key) > 0
     );
   }
 
   /**
-   * Returns a view where all items are greater than or equal to the given value.
+   * Returns a view where all values are greater than or equal to the given value.
    * If a comparator is not on this iterator or provided an error is thrown.
    * 
-   * @param value The value to compare against.
+   * @param threshold The value to compare against.
    * @param comparator An override for any existing comparison logic.
    */
-  public gte (value: T, comparator?: IterateCompare<T, K>): Iterate<T, K, S>
+  public gte (threshold: T, comparator?: IterateCompare<T, K>): Iterate<T, K, S>
   {
     return this.view<IterateCompare<T, K>>(
       () => this.getComparator(comparator),
-      (compare, item, itemKey) => compare(item, value, itemKey) >= 0
+      (compare, value, key) => compare(value, threshold, key) >= 0
     );
   }
 
   /**
-   * Returns a view where all items are less than the given value.
+   * Returns a view where all values are less than the given value.
    * If a comparator is not on this iterator or provided an error is thrown.
    * 
-   * @param value The value to compare against.
+   * @param threshold The value to compare against.
    * @param comparator An override for any existing comparison logic.
    */
-  public lt (value: T, comparator?: IterateCompare<T, K>): Iterate<T, K, S>
+  public lt (threshold: T, comparator?: IterateCompare<T, K>): Iterate<T, K, S>
   {
     return this.view<IterateCompare<T, K>>(
       () => this.getComparator(comparator),
-      (compare, item, itemKey) => compare(item, value, itemKey) < 0
+      (compare, value, key) => compare(value, threshold, key) < 0
     );
   }
 
   /**
-   * Returns a view where all items are less than or equal to the given value.
+   * Returns a view where all values are less than or equal to the given value.
    * If a comparator is not on this iterator or provided an error is thrown.
    * 
-   * @param value The value to compare against.
+   * @param threshold The value to compare against.
    * @param comparator An override for any existing comparison logic.
    */
-  public lte (value: T, comparator?: IterateCompare<T, K>): Iterate<T, K, S>
+  public lte (threshold: T, comparator?: IterateCompare<T, K>): Iterate<T, K, S>
   {
     return this.view<IterateCompare<T, K>>(
       () => this.getComparator(comparator),
-      (compare, item, itemKey) => compare(item, value, itemKey) <= 0
+      (compare, value, key) => compare(value, threshold, key) <= 0
     );
   }
 
   /**
-   * Returns a view of this iterator which does not include the items in the
+   * Returns a view of this iterator which does not include the values in the
    * given iterator.
    * 
-   * @param values The iterator with items to exclude.
+   * @param source The source of values to exclude.
    * @param equality An override for any existing equality logic.
    */
   public exclude (source: IterateSourceType<T>, equality?: IterateEquals<T, any>): Iterate<T, K, S>;
@@ -1033,15 +1033,15 @@ export class Iterate<T, K, S>
   {
     return this.view<Iterate<T, any, any>>(
       () => iterate<T, K, S>(source).withEquality(this.getEquality(equality)),
-      (values, item) => !values.contains(item)
+      (values, value) => !values.contains(value)
     );
   }
 
   /**
-   * Returns a view which has items which are in this iterator and the given
+   * Returns a view which has values which are in this iterator and the given
    * iterator.
    * 
-   * @param values The iterator with items to intersect with.
+   * @param source The source of values to intersect with.
    * @param equality An override for any existing equality logic.
    */
   public intersect (source: IterateSourceType<T>, equality?: IterateEquals<T, any>): Iterate<T, K, S>;
@@ -1049,12 +1049,12 @@ export class Iterate<T, K, S>
   {
     return this.view<Iterate<T, any, any>>(
       () => iterate<T, K, S>(source).withEquality(this.getEquality(equality)),
-      (values, item) => values.contains(item)
+      (values, value) => values.contains(value)
     );
   }
 
   /**
-   * Returns a view which only contains unique items.
+   * Returns a view which only contains unique values.
    * 
    * @param equality An override for any existing equality logic.
    */
@@ -1062,14 +1062,14 @@ export class Iterate<T, K, S>
   {
     return this.view<{ existing: Array<[K, T]>, isEqual: IterateEquals<T, K> }>(
       () => ({ existing: [], isEqual: this.getEquality(equality) }),
-      ({existing, isEqual}, item, itemKey) => existing.findIndex(([existKey, exist]) => isEqual(exist, item, existKey, itemKey)) === -1,
-      ({existing}, item, itemKey) => existing.push([itemKey, item])
+      ({existing, isEqual}, value, key) => existing.findIndex(([existKey, exist]) => isEqual(exist, value, existKey, key)) === -1,
+      ({existing}, value, key) => existing.push([key, value])
     );
   }
 
   /**
-   * Returns a view which only contains items that have duplicates in this 
-   * iterator. For any items that occur more than twice you can exclude them
+   * Returns a view which only contains values that have duplicates in this 
+   * iterator. For any values that occur more than twice you can exclude them
    * from the resulting view by passing `true` to `onlyOnce`.
    * 
    * @param onlyOnce If the view should contain unique or all duplicates.
@@ -1079,8 +1079,8 @@ export class Iterate<T, K, S>
   { 
     return this.view<{ existing: Array<[K, T]>, once: boolean[], isEqual: IterateEquals<T, K> }>(
       () => ({ existing: [], once: [], isEqual: this.getEquality(equality) }),
-      ({existing, once, isEqual}, item, itemKey) =>  {
-        const index = existing.findIndex(([existKey, exist]) => isEqual(exist, item, existKey, itemKey));
+      ({existing, once, isEqual}, value, key) =>  {
+        const index = existing.findIndex(([existKey, exist]) => isEqual(exist, value, existKey, key));
         let act = index !== -1;
 
         if (act) {
@@ -1089,7 +1089,7 @@ export class Iterate<T, K, S>
           }
           once[index] = true;
         } else {
-          existing.push([itemKey, item]);
+          existing.push([key, value]);
         }
 
         return act;
@@ -1104,9 +1104,9 @@ export class Iterate<T, K, S>
   {
     return new Iterate<T, K, S>(next =>
     {
-      this.each((item, itemKey, prev) =>
+      this.each((value, key, prev) =>
       {
-        if (next.act( item, itemKey ) === IterateAction.STOP)
+        if (next.act( value, key ) === IterateAction.STOP)
         {
           prev.stop()
         }
@@ -1116,7 +1116,7 @@ export class Iterate<T, K, S>
   }
 
   /**
-   * Returns a copy of the items in this view as a new iterator.
+   * Returns a copy of the values in this view as a new iterator.
    */
   public copy (): Iterate<T, K, Array<[K, T]>>
   {
@@ -1124,31 +1124,31 @@ export class Iterate<T, K, S>
   }
 
   /**
-   * Returns a view which requires a fully resolved array of items. The view 
-   * must keep track of the original item index in order to ensure removals
+   * Returns a view which requires a fully resolved array of values. The view 
+   * must keep track of the original value index in order to ensure removals
    * and replaces can be performed on the source.
    * 
    * @param onResolve 
    */
-  public viewResolved(onResolve: (items: Array<[K, T]>, handleAct: (item: T, itemKey: K, index: number) => IterateAction) => void): Iterate<T, K, S>
+  public viewResolved(onResolve: (values: Array<[K, T]>, handleAct: (value: T, key: K, index: number) => IterateAction) => void): Iterate<T, K, S>
   {
     return new Iterate<T, K, S>(next =>
     {
-      const items: Array<[K, T]> = this.entries();
+      const values: Array<[K, T]> = this.entries();
       const actions: IterateAction[] = [];
       const replaces: T[] = [];
       const original: T[] = [];
 
       let mutates: boolean = false;
 
-      onResolve(items, (item, itemKey, index) => 
+      onResolve(values, (value, key, index) => 
       {
-        const action = next.act(item, itemKey);
+        const action = next.act(value, key);
 
         if (action === IterateAction.REPLACE || action === IterateAction.REMOVE)
         {
           mutates = true;
-          original[ index ] = item;
+          original[ index ] = value;
           actions[ index ] = action;
           replaces[ index ] = next.replaceWith;
         }
@@ -1160,18 +1160,18 @@ export class Iterate<T, K, S>
       {
         let index: number = 0;
 
-        this.each((item, itemKey, modifyIterate) =>
+        this.each((value, key, modifyIterate) =>
         {
           switch (actions[ index ])
           {
             case IterateAction.REMOVE:
-              if (item === original[index]) {
+              if (value === original[index]) {
                 modifyIterate.remove();
               }
               break;
 
             case IterateAction.REPLACE:
-              if (item === original[index]) {
+              if (value === original[index]) {
                 modifyIterate.replace( replaces[ index ] );
               }
               break;
@@ -1185,16 +1185,16 @@ export class Iterate<T, K, S>
   }
 
   /**
-   * Returns a view which has the items sorted.
+   * Returns a view which has the values sorted.
    * 
    * @param comparator An override for any existing comparison logic.
    */
   public sorted (comparator?: IterateCompare<T, K>): Iterate<T, K, S>
   {
-    return this.viewResolved((items, handleAct) =>
+    return this.viewResolved((values, handleAct) =>
     {
       const compare = this.getComparator(comparator);
-      const mapped = items.map(([key, value], index) => ({ key, value, index }));
+      const mapped = values.map(([key, value], index) => ({ key, value, index }));
 
       mapped.sort((a, b) => compare(a.value, b.value));
 
@@ -1209,7 +1209,7 @@ export class Iterate<T, K, S>
   }
 
   /**
-   * Returns an view of items in this iterator and presents them in a random order.
+   * Returns an view of values in this iterator and presents them in a random order.
    */
   public shuffle (passes: number = 1): Iterate<T, K, S>
   {
@@ -1219,10 +1219,10 @@ export class Iterate<T, K, S>
       arr[k] = t;
     }
 
-    return this.viewResolved((items, handleAct) => 
+    return this.viewResolved((values, handleAct) => 
     {
       const indices: number[] = [];
-      const n = items.length;
+      const n = values.length;
 
       for (let i = 0; i < n; i++)
       {
@@ -1234,14 +1234,14 @@ export class Iterate<T, K, S>
         for (let k = 0; k < n; k++)
         {
           const j = Math.floor(Math.random() * n);
-          swap(items, j, k);
+          swap(values, j, k);
           swap(indices, j, k);
         }
       }
 
       for (let i = 0; i < n; i++)
       {
-        const [key, value] = items[i];
+        const [key, value] = values[i];
 
         if (handleAct(value, key, indices[i]) === IterateAction.STOP)
         {
@@ -1252,15 +1252,15 @@ export class Iterate<T, K, S>
   }
 
   /**
-   * Returns an view of items in this iterator and presents them in reverse.
+   * Returns an view of values in this iterator and presents them in reverse.
    */
   public reverse (): Iterate<T, K, S>
   {
-    return this.viewResolved((items, handleAct) => 
+    return this.viewResolved((values, handleAct) => 
     {
-      for (let i = items.length - 1; i >= 0; i--)
+      for (let i = values.length - 1; i >= 0; i--)
       {
-        const [key, value] = items[i];
+        const [key, value] = values[i];
 
         if (handleAct(value, key, i) === IterateAction.STOP)
         {
@@ -1272,14 +1272,14 @@ export class Iterate<T, K, S>
 
   /**
    * Returns an iterator where this iterator is the source and the returned
-   * iterator is built from transformed items pulled from items in the source
+   * iterator is built from transformed values pulled from values in the source
    * of this iterator. 
    *
-   * @param transformer The function which transforms an item to another.
+   * @param transformer The function which transforms a value to another type.
    * @param untransformer The function which untransforms a value when replace is called.
    */
   public transform<W>(transformer: IterateCallback<T, K, S, W>,
-    untransformer: (replaceWith: W, current: W, item: T, key: K) => T = null): Iterate<W, K, S>
+    untransformer: (replaceWith: W, current: W, value: T, key: K) => T = null): Iterate<W, K, S>
   {
     return new Iterate<W, K, S>(next =>
     {
@@ -1309,11 +1309,11 @@ export class Iterate<T, K, S>
   }
 
   /**
-   * Invokes the callback for each item in the source of this iterator. The
+   * Invokes the callback for each value in the source of this iterator. The
    * second argument in the callback is the reference to this iterator and
    * [[Iterate.stop]] can be called at anytime to cease iteration.
    *
-   * @param callback The function to invoke for each item in this iterator.
+   * @param callback The function to invoke for each value in this iterator.
    */
   public each (callback: IterateCallback<T, K, S, any>): this
   {
@@ -1353,27 +1353,27 @@ export class Iterate<T, K, S>
   /**
    * Returns an iterator for the given array.
    *
-   * @param items The array of items to iterate.
+   * @param values The array of values to iterate.
    * @returns A new iterator for the given array.
    */
-  public static entries<T, K> (items: Array<[K, T]> = []): Iterate<T, K, Array<[K, T]>>
+  public static entries<T, K> (values: Array<[K, T]> = []): Iterate<T, K, Array<[K, T]>>
   {
     return new Iterate<T, K, Array<[K, T]>>(iterator =>
     {
-      for (let i = 0; i < items.length; i++)
+      for (let i = 0; i < values.length; i++)
       {
-        const [key, value] = items[ i ];
+        const [key, value] = values[ i ];
 
         switch (iterator.act(value, key))
         {
           case IterateAction.STOP:
             return;
           case IterateAction.REMOVE:
-            items.splice(i, 1);
+            values.splice(i, 1);
             i--;
             break;
           case IterateAction.REPLACE:
-            items.splice(i, 1, [key, iterator.replaceWith]);
+            values.splice(i, 1, [key, iterator.replaceWith]);
             break;
         }
       }
@@ -1383,25 +1383,25 @@ export class Iterate<T, K, S>
   /**
    * Returns an iterator for the given array.
    *
-   * @param items The array of items to iterate.
+   * @param values The array of values to iterate.
    * @returns A new iterator for the given array.
    */
-  public static array<T> (items: T[] = []): Iterate<T, number, T[]>
+  public static array<T> (values: T[] = []): Iterate<T, number, T[]>
   {
     return new Iterate<T, number, T[]>(iterator =>
     {
-      for (let i = 0; i < items.length; i++)
+      for (let i = 0; i < values.length; i++)
       {
-        switch (iterator.act(items[ i ], i))
+        switch (iterator.act(values[ i ], i))
         {
           case IterateAction.STOP:
             return;
           case IterateAction.REMOVE:
-            items.splice(i, 1);
+            values.splice(i, 1);
             i--;
             break;
           case IterateAction.REPLACE:
-            items.splice(i, 1, iterator.replaceWith);
+            values.splice(i, 1, iterator.replaceWith);
             break;
         }
       }
@@ -1410,7 +1410,7 @@ export class Iterate<T, K, S>
 
   /**
    * Returns an iterator for the keys and values specified. If the key and 
-   * value iterators don't have the same number of items, the returned iterator
+   * value iterators don't have the same number of values, the returned iterator
    * will have the maximum pairs possible (which is the lesser of the number
    * of keys and values).
    * 
@@ -1521,13 +1521,13 @@ export class Iterate<T, K, S>
   /**
    * Returns an iterator for the given Map.
    *
-   * @param items The Map of key-value pairs to iterate.
+   * @param values The Map of key-value pairs to iterate.
    * @returns A new iterator for the given Map.
    */
-  public static map<T, K> (items: Map<K, T> = new Map<K, T>()): Iterate<T, K, Map<K, T>>
+  public static map<T, K> (values: Map<K, T> = new Map<K, T>()): Iterate<T, K, Map<K, T>>
   {
     return Iterate.hasEntries<T, K, Map<K, T>>(
-      items, 
+      values, 
       (map, key) => map.delete(key), 
       (map, key, value, newValue) => map.set(key, newValue)
     );
@@ -1536,29 +1536,29 @@ export class Iterate<T, K, S>
   /**
    * Returns an iterator for the given Set.
    *
-   * @param items The Set of items to iterate.
+   * @param values The Set of values to iterate.
    * @returns A new iterator for the given Set.
    */
-  public static set<T> (items: Set<T> = new Set<T>()): Iterate<T, T, Set<T>>
+  public static set<T> (values: Set<T> = new Set<T>()): Iterate<T, T, Set<T>>
   {
     return Iterate.hasEntries<T, T, Set<T>>(
-      items,
+      values,
       (set, key) => set.delete(key),
-      (set, key, value, newValue) => items.delete(value) && items.add(newValue)
+      (set, key, value, newValue) => values.delete(value) && values.add(newValue)
     );
   }
 
   /**
    * Returns an iterator for any iterable. Because iterables don't support 
    *
-   * @param items The iterable collection.
+   * @param values The iterable collection.
    * @returns A new iterator for the given set.
    */
-  public static iterable<T> (items: Iterable<T>): Iterate<T, number, Iterable<T>>
+  public static iterable<T> (values: Iterable<T>): Iterate<T, number, Iterable<T>>
   {
     return new Iterate<T, number, Iterable<T>>(iterator =>
     {
-      const iterable = items[Symbol.iterator]();
+      const iterable = values[Symbol.iterator]();
       let index = 0;
 
       for (let next = iterable.next(); !next.done; next = iterable.next(), index++)
@@ -1575,30 +1575,30 @@ export class Iterate<T, K, S>
    * Returns an iterator for the given object optionally checking the
    * `hasOwnProperty` function on the given object.
    *
-   * @param items The object to iterate.
+   * @param values The object to iterate.
    * @param hasOwnProperty If `hasOwnProperty` should be checked.
    * @returns A new iterator for the given object.
    */
-  public static object<T> (items: { [key: string]: T }, hasOwnProperty: boolean = true): Iterate<T, string, { [key: string]: T }>
+  public static object<T> (values: { [key: string]: T }, hasOwnProperty: boolean = true): Iterate<T, string, { [key: string]: T }>
   {
     return new Iterate<T, string, { [key: string]: T }>(iterator =>
     {
-      for (const key in items)
+      for (const key in values)
       {
-        if (hasOwnProperty && !items.hasOwnProperty( key ))
+        if (hasOwnProperty && !values.hasOwnProperty( key ))
         {
           continue;
         }
 
-        switch (iterator.act(items[ key ], key))
+        switch (iterator.act(values[ key ], key))
         {
           case IterateAction.STOP:
             return;
           case IterateAction.REMOVE:
-            delete items[ key ];
+            delete values[ key ];
             break;
           case IterateAction.REPLACE:
-            items[ key ] = iterator.replaceWith;
+            values[ key ] = iterator.replaceWith;
             break;
         }
       }
@@ -1818,8 +1818,8 @@ export class Iterate<T, K, S>
   }
 
   /**
-   * Joins all the given sources into a single iterator where the items
-   * returned are in the same order as passed to this function. If any items
+   * Joins all the given sources into a single iterator where the values
+   * returned are in the same order as passed to this function. If any values
    * are removed from the returned iterator they will be removed from the given
    * iterator if it supports removal.
    *
@@ -1839,9 +1839,9 @@ export class Iterate<T, K, S>
 
       for (const child of iterators)
       {
-        child.each((item, itemKey, childIterate) =>
+        child.each((value, key, childIterate) =>
         {
-          switch (parent.act( item as T, itemKey as unknown as K ))
+          switch (parent.act( value as T, key as unknown as K ))
           {
             case IterateAction.REMOVE:
               childIterate.remove();
@@ -1864,9 +1864,9 @@ export class Iterate<T, K, S>
   }
 
   /**
-   * Returns a new iterator with no items.
+   * Returns a new iterator with no values.
    *
-   * @returns A new iterator with no items.
+   * @returns A new iterator with no values.
    */
   public static empty<T, K, S> (): Iterate<T, K, S>
   {

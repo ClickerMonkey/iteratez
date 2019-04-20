@@ -179,7 +179,7 @@ describe('Iterate', () => {
   it('reduce', () =>
   {
     const a: number[] = [1, 2, 3, 4, 5];
-    const sum: number = Iterate.array( a ).reduce( 0, (item, current) => current + item );
+    const sum: number = Iterate.array( a ).reduce( 0, (value, current) => current + value );
 
     expect( sum ).toBe( 15 );
   })
@@ -206,7 +206,7 @@ describe('Iterate', () => {
   {
     const a: number[] = [1, 2, 3, 4];
     const transformed: string[] = Iterate.array( a )
-      .transform<string>(item => 'x' + item)
+      .transform<string>(value => 'x' + value)
       .array();
 
     expect( transformed ).toEqual( ['x1', 'x2', 'x3', 'x4'] );
@@ -582,7 +582,7 @@ describe('Iterate', () => {
 
     expect( fn3('hello') ).toEqual(5);
     expect( fn3(new Map<number, string>([[1, 'a']])) ).toBe(1);
-    
+
     // expect( fn3({x: 'number'}) ).toEqual(5);
   });
 

@@ -38,7 +38,7 @@ export function iterate<T, I extends Iterable<T>> (iterable: I): Iterate<T, numb
 export function iterate<T, K, E extends { entries(): IterableIterator<[K, T]> }> (hasEntries: E): Iterate<T, K, E>
 export function iterate<T> (object: { [key: string]: T} ): Iterate<T, string, { [key: string]: T}>
 export function iterate<T> (empty?: null): Iterate<any, any, any>
-export function iterate<T> (item: T): Iterate<T, number, [T]>
+export function iterate<T> (value: T): Iterate<T, number, [T]>
 export function iterate<T, K, S> (s: any): Iterate<T, K, S>
 {
   for (const generator of Generators)
