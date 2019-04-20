@@ -1,4 +1,4 @@
-import { getDateComparator, getDateEquality, getNumberComparator, getStringComparator, isFunction, iterate, defaultCompare } from './functions';
+import { defaultCompare, getDateComparator, getDateEquality, getNumberComparator, getStringComparator, isFunction, iterate } from './functions';
 import { IterateAction } from "./IterateAction";
 import { GetKeyFor, GetValueFor, HasEntries, IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateFunction, IterateFunctionExecute, IterateResult, IterateSource, IterateSourceType, IterateSourceTypeKey } from "./types";
 
