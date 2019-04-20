@@ -60,6 +60,28 @@ export type IterateCompare<T, K> = (a: T, b: T, aKey?: K, bKey?: K) => number;
  */
 export type IterateGenerator<T, K, S> = (source: any) => Iterate<T, K, S> | false;
 
+/**
+ * A type which takes a source and returns a result from a function.
+ */
+export type IterateFunction<T, R, A extends any[], K, S> = 
+  [S] extends [any]
+    ? (source: IterateSourceTypeKey<T, K, S>, ...args: A) => R
+    : (source: S, ...args: A) => R;
+
+/**
+ * A function which performs a function on a subject and possibly applies a result.
+ */
+export type IterateFunctionExecute<T, R, A extends any[], K, S> = 
+  [R] extends [void]
+    ? (subject: Iterate<T, K, S>) => any 
+    : [A] extends []
+      ? (subject: Iterate<T, K, S>, setResult: (result: R) => any) => any
+      : (subject: Iterate<T, K, S>, setResult: (result: R) => any, ...args: A) => any;
+
+/**
+ * A function for handling a result of an operation.
+ */
+export type IterateResult<T> = (result: T) => any;
 
 /**
  * A type which has an entries() function that returns an IterableIterator.

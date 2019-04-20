@@ -531,6 +531,75 @@ describe('Iterate', () => {
     expect( a ).toEqual( [] );
   });
 
+  it('func', () => 
+  {
+    // A function which †akes strings and finds all the ones with a's, change's
+    // them to upper case and returns the number of changed.
+    const fn = Iterate.func<string, number>(
+      (subject, setResult) => subject
+        .where(x => x.indexOf('a') !== -1)
+        .count(setResult)
+        .update(x => x.toUpperCase())
+    );
+
+    const a = [
+      'apple',
+      'bit',
+      'cat',
+      'dog',
+      'elephant',
+      'frog'
+    ];
+    
+    expect( fn(a) ).toEqual( 3 );
+
+    expect( a ).toEqual([
+      'APPLE',
+      'bit',
+      'CAT',
+      'dog',
+      'ELEPHANT',
+      'frog'
+    ]);
+
+    const fn2 = Iterate.func<string, number>(
+      (source, setResult) => source
+        .where(x => x.indexOf('a') !== -1)
+        .count(setResult)
+        .update(x => x.toUpperCase())
+    );
+    
+    const a2 = ['apple', 'bit', 'cat'];
+    const b2 = fn2(a2); 
+
+    expect( b2 ).toEqual(2);
+
+    // Restrict function source type
+    const fn3 = Iterate.func<string, number, [], number, string[]>(
+      (source, setResult) => source
+        .count(setResult)
+    );
+
+    expect( fn3('hello') ).toEqual(5);
+    expect( fn3(new Map<number, string>([[1, 'a']])) ).toBe(1);
+    
+    // expect( fn3({x: 'number'}) ).toEqual(5);
+  });
+
+  it('func parameters', () =>
+  {
+    const fn = Iterate.func<string, string[], [string]>(
+      (subject, setResult, letter) => subject
+        .fork(f => f
+          .where(x => x.indexOf(letter) !== -1)
+          .update(x => x.toUpperCase()))
+        .array(setResult)
+    );
+    
+    expect( fn(['apple', 'bit'], 'a') ).toEqual(['APPLE', 'bit']);
+    expect( fn(['apple', 'bit'], 'b') ).toEqual(['apple', 'BIT']);
+  });
+
   interface Node<T> {
     value: T;
     next?: Node<T>;

@@ -181,4 +181,31 @@ describe('iz', () => {
     expect( joined.array() ).toEqual( ['hello', 1, 2] );
   });
 
+  it('zip numbers', () =>
+  {
+    // Iterate<string, number, [IterateSourceType<number>, IterateSourceType<string>>
+    const a = Iterate.zip([1, 2, 3], ['a', 'b', 'c']);
+
+    const b = a.skip(1).take(1);
+
+    expect( a.entries() ).toEqual([
+      [1, 'a'],
+      [2, 'b'],
+      [3, 'c']
+    ]);
+
+    expect( b.entries() ).toEqual([[2, 'b']]);
+  });
+
+  it('zip mixed', () =>
+  {
+    // Iterate<string, number, [IterateSourceType<number>, IterateSourceType<string>]>
+    const a = Iterate.zip([1, 2, 3], new Set<string>(['a', 'b']));
+
+    expect( a.entries() ).toEqual([
+      [1, 'a'],
+      [2, 'b']
+    ]);
+  });
+
 });

@@ -185,3 +185,11 @@ export function getDateEquality<K> (equalityTimespan: number = 1, utc: boolean =
 
   return (a, b) => equals<Date, K>(a, b, isType, equality);
 }
+
+/**
+ * Determines whether the given variable is a function.
+ */
+export function isFunction(x: any): x is (...args: any[]) => any
+{
+  return typeof x === 'function';
+}

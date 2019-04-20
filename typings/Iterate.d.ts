@@ -1,5 +1,5 @@
 import { IterateAction } from "./IterateAction";
-import { GetKeyFor, GetValueFor, HasEntries, IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateSource, IterateSourceType, IterateSourceTypeKey } from "./types";
+import { GetKeyFor, GetValueFor, HasEntries, IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateFunction, IterateFunctionExecute, IterateResult, IterateSource, IterateSourceType, IterateSourceTypeKey } from "./types";
 /**
  * A class that allows an iteratable source to be iterated any number of times.
  *
@@ -28,7 +28,7 @@ import { GetKeyFor, GetValueFor, HasEntries, IterateCallback, IterateCompare, It
  * - `reduce`: Reduces the items in the view down to a single value.
  * - `min`: Returns the minimum item in the view.
  * - `max`: Returns the maximum item in the view.
- * - `iterate`: Invokes a function for each item in the view.
+ * - `each`: Invokes a function for each item in the view.
  * - `copy`: Copies the items in the view and returns a new iterator.
  *
  * **Mutations**
@@ -246,90 +246,116 @@ export declare class Iterate<T, K, S> {
     /**
      * An operation that determines whether this iterator is empty.
      *
-     * @returns `true` if no valid items exist in the iterator.
+     * @param setResult A function to pass the result to.
      */
     empty(): boolean;
+    empty(setResult: IterateResult<boolean>): this;
     /**
      * An operation that determines whether this iterator has an item.
      *
-     * @returns `true` if no valid items exist in the iterator.
+     * @param setResult A function to pass the result to.
      */
     has(): boolean;
+    has(setResult: IterateResult<boolean>): this;
     /**
      * An operation that determines whether this iterator has the given value.
      *
      * @param value The value to search for.
-     * @param equality An override for any existing equality logic.
+     * @param setResult A function to pass the result to.
      */
-    contains(value: T, equality?: IterateEquals<T, K>): boolean;
+    contains(value: T): boolean;
+    contains(value: T, setResult: IterateResult<boolean>): this;
     /**
      * An operation that counts the number of items in the iterator.
      *
-     * @returns The number of items in the iterator.
+     * @param setResult A function to pass the count to.
      */
     count(): number;
+    count(setResult: IterateResult<number>): this;
     /**
      * An operation that returns the first item in the iterator.
      *
-     * @returns The first item found.
+     * @param setResult A function to pass the first value to.
      */
     first(): T;
+    first(setResult: IterateResult<T>): this;
     /**
      * An operation that returns the last item in the iterator.
      *
-     * @returns The last item found.
+     * @param setResult A function to pass the last value to.
      */
     last(): T;
+    last(setResult: IterateResult<T>): this;
     /**
      * An operation that builds an array of items from the source.
      *
      * @param out The array to place the items in.
-     * @returns The reference to `out` which has had items added to it.
+     * @param setResult A function to pass the array to.
      */
     array(out?: T[]): T[];
+    array(out: T[], setResult: IterateResult<T[]>): this;
+    array(setResult: IterateResult<T[]>): this;
     /**
      * An operation that builds an array of [key, item] entries from this view.
      *
      * @param out The array to place the entries in.
-     * @returns The reference to `out` which has had entries added to it.
+     * @param setResult A function to pass the entries to.
      */
     entries(out?: Array<[K, T]>): Array<[K, T]>;
+    entries(out: Array<[K, T]>, setResult: IterateResult<Array<[K, T]>>): this;
+    entries(setResult: IterateResult<Array<[K, T]>>): this;
     /**
      * An operation that builds an object of items from the iterator keyed by a
      * result returned by a `getKey` function.
      *
      * @param getKey The function which returns the key of the object.
      * @param out The object to place the items in.
-     * @returns The reference to `out` which has had items set to it.
+     * @param setResult A function to pass the object to.
      */
     object<O = {
         [key: string]: T;
     }>(getKey: (item: T) => keyof O, out?: O): O;
+    object<O = {
+        [key: string]: T;
+    }>(getKey: (item: T) => keyof O, out: O, setResult: IterateResult<O>): this;
+    object<O = {
+        [key: string]: T;
+    }>(getKey: (item: T) => keyof O, setResult: IterateResult<O>): this;
     /**
      * An operation that builds a Set of items from the source.
      *
      * @param out The Set to place the items in.
-     * @returns The reference to `out` which has had items added to it.
+     * @param setResult A function to pass the set to.
      */
     set(out?: Set<T>): Set<T>;
+    set(out: Set<T>, setResult: IterateResult<Set<T>>): this;
+    set(setResult: IterateResult<Set<T>>): this;
     /**
      * An operation that builds a Map of key-value pairs from the source.
      *
      * @param out The Map to place the items in.
-     * @returns The reference to `out` which has had items added to it.
+     * @param setResult A function to pass the map to.
      */
     map(out?: Map<K, T>): Map<K, T>;
+    map(out: Map<K, T>, setResult: IterateResult<Map<K, T>>): this;
+    map(setResult: IterateResult<Map<K, T>>): this;
     /**
      * An operation that returns an object with arrays of items where the
      * property of the object is a key returned by a function.
      *
      * @param by A function to get the key from an item.
      * @param out The object to add groups to.
-     * @returns The reference to `out` which has had items added to it.
+     * @param setResult A function to pass the groups to.
      */
     group<G extends {
         [by: string]: T[];
     }>(by: (item: T) => any, out?: G): G;
+    group<G extends {
+        [by: string]: T[];
+    }>(by: (item: T) => any, out: G, setResult: IterateResult<G>): this;
+    group<G extends {
+        [by: string]: T[];
+    }>(by: (item: T) => any, setResult: IterateResult<G>): this;
     /**
      * An operation that reduces all the items in the source to a single value
      * given the initial value and a function to convert an item and the current
@@ -339,22 +365,26 @@ export declare class Iterate<T, K, S> {
      *    first time.
      * @param reducer A function which takes an item in the iterator and the
      *    current reduced value and returns a new reduced value.
+     * @param setResult A function to pass the reduced value to.
      */
     reduce<R>(initial: R, reducer: (item: T, reduced: R) => R): R;
+    reduce<R>(initial: R, reducer: (item: T, reduced: R) => R, setResult: IterateResult<R>): this;
     /**
      * An operation that returns the minimum item in this iterator. If this
      * iterator is empty null is returned.
      *
-     * @param comparator An override for any existing comparison logic.
+     * @param setResult A function to pass the minimum value to.
      */
-    min(comparator?: IterateCompare<T, K>): T;
+    min(): T;
+    min(setResult: IterateResult<T>): this;
     /**
      * An operation that returns the maximum item in this iterator. If this
      * iterator is empty null is returned.
      *
-     * @param comparator An override for any existing comparison logic.
+     * @param setResult A function to pass the maximum value to.
      */
-    max(comparator?: IterateCompare<T, K>): T;
+    max(): T;
+    max(setResult: IterateResult<T>): this;
     /**
      * A mutation which removes items in this iterator from the source.
      */
@@ -364,12 +394,19 @@ export declare class Iterate<T, K, S> {
      * returns a new iterator with the removed items.
      */
     extract(): Iterate<T, K, Array<[K, T]>>;
+    extract(setResult: IterateResult<Iterate<T, K, Array<[K, T]>>>): this;
     /**
-     * A mutation which replaces items in this iterator from the source.
+     * A mutation which replaces values in this view with a single given value.
      *
-     * @param replacement The item to replace for all the items in this iterator.
+     * @param replacement The value to replace for all the values in this iterator.
      */
     overwrite(replacement: T): this;
+    /**
+     * A mutation which replaces values in this view with a dynamically created one.
+     *
+     * @param updater A function which given a value and key returns a replacement value.
+     */
+    update(updater: (item: T, key: K) => T): this;
     /**
      * Forks this view into another and returns a reference to this view.
      * This allows chaining of multiple views which each perform a different
@@ -378,7 +415,6 @@ export declare class Iterate<T, K, S> {
      *
      * @param forker A function which takes the iterator at this point and
      *    performs any mutations and operations.
-     * @returns The reference to this iterator.
      */
     fork(forker: (fork: this) => any): this;
     /**
@@ -590,7 +626,7 @@ export declare class Iterate<T, K, S> {
      *
      * @param callback The function to invoke for each item in this iterator.
      */
-    iterate(callback: IterateCallback<T, K, S, any>): this;
+    each(callback: IterateCallback<T, K, S, any>): this;
     /**
      * Passes the result of the iteration to the given function if a truthy
      * result was passed to [[Iterate.stop]].
@@ -608,14 +644,14 @@ export declare class Iterate<T, K, S> {
      * @param items The array of items to iterate.
      * @returns A new iterator for the given array.
      */
-    static entries<T, K>(items: Array<[K, T]>): Iterate<T, K, Array<[K, T]>>;
+    static entries<T, K>(items?: Array<[K, T]>): Iterate<T, K, Array<[K, T]>>;
     /**
      * Returns an iterator for the given array.
      *
      * @param items The array of items to iterate.
      * @returns A new iterator for the given array.
      */
-    static array<T>(items: T[]): Iterate<T, number, T[]>;
+    static array<T>(items?: T[]): Iterate<T, number, T[]>;
     /**
      * Returns an iterator for the keys and values specified. If the key and
      * value iterators don't have the same number of items, the returned iterator
@@ -629,9 +665,7 @@ export declare class Iterate<T, K, S> {
      * @param keys The iterator to obtain the keys from.
      * @param values The iterator to obtain the values from.
      */
-    static zip<T, K, S extends IterateSourceTypeKey<T, K, S>>(keys: S, values: S): Iterate<T, K, S>;
-    static zip<T, K>(keys: IterateSourceTypeKey<K, number>, values: IterateSourceTypeKey<T, number>): Iterate<T, K, any>;
-    static zip<T, K>(keys: IterateSourceType<K>, values: IterateSourceType<T>): Iterate<T, K, any>;
+    static zip<J, K extends GetValueFor<J>, S, T extends GetValueFor<S>>(keySource: J, valueSource: S): Iterate<T, K, [J, S]>;
     /**
      * Returns an iterator for any object which has an entries() iterable.
      *
@@ -639,28 +673,28 @@ export declare class Iterate<T, K, S> {
      * @param onRemove The function that should handle removing a key/value.
      * @param onReplace The function that should handle replacing a value.
      */
-    static hasEntries<T, K, E extends HasEntries<T, K>>(hasEntries: E, onRemove?: (entries: E, key: K, value: T) => any, onReplace?: (entries: E, key: K, value: T, newValue: T) => any): Iterate<T, K, E>;
+    static hasEntries<T, K, E extends HasEntries<T, K>>(hasEntries?: E, onRemove?: (entries: E, key: K, value: T) => any, onReplace?: (entries: E, key: K, value: T, newValue: T) => any): Iterate<T, K, E>;
     /**
      * Returns an iterator for the given Map.
      *
      * @param items The Map of key-value pairs to iterate.
      * @returns A new iterator for the given Map.
      */
-    static map<T, K>(items: Map<K, T>): Iterate<T, K, Map<K, T>>;
+    static map<T, K>(items?: Map<K, T>): Iterate<T, K, Map<K, T>>;
     /**
      * Returns an iterator for the given Set.
      *
      * @param items The Set of items to iterate.
      * @returns A new iterator for the given Set.
      */
-    static set<T>(items: Set<T>): Iterate<T, T, Set<T>>;
+    static set<T>(items?: Set<T>): Iterate<T, T, Set<T>>;
     /**
      * Returns an iterator for any iterable. Because iterables don't support
      *
      * @param items The iterable collection.
      * @returns A new iterator for the given set.
      */
-    static iterable<T, I extends Iterable<T>>(items: I): Iterate<T, number, I>;
+    static iterable<T>(items: Iterable<T>): Iterate<T, number, Iterable<T>>;
     /**
      * Returns an iterator for the given object optionally checking the
      * `hasOwnProperty` function on the given object.
@@ -689,7 +723,7 @@ export declare class Iterate<T, K, S> {
      *    not specified and a replace is called and `strict` is true an error
      *    will be thrown.
      */
-    static linked<N, T = any, K = T>(getValue: (node: N) => T, getNext: (node: N) => N | undefined | null, remove?: (node: N, prev: N) => any, replaceValue?: (node: N, value: T) => any, getKey?: (node: N) => K): (previousNode: N, strict?: boolean) => Iterate<T, K, N>;
+    static linked<N, T = any, K = T>(getValue: (node: N) => T, getNext: (node: N) => N | undefined | null, remove?: (node: N, prev: N) => any, replaceValue?: (node: N, value: T) => any, getKey?: (node: N) => K): (previousNode?: N, strict?: boolean) => Iterate<T, K, N>;
     /**
      * Returns a function for iterating over a tree. You pass a node to the
      * function returned (and whether it should perform a depth-first or
@@ -700,7 +734,7 @@ export declare class Iterate<T, K, S> {
      *    iterator which can return the children.
      * @param replaceValue A function which applies a value to a node.
      */
-    static tree<N, T = any, K = T>(getValue: (node: N) => T, getChildren: (node: N) => N[] | Iterate<N, any, any> | undefined | null, replaceValue?: (node: N, value: T) => any, getKey?: (node: N) => K): (startingNode: N, depthFirst?: boolean, strict?: boolean) => Iterate<T, K, N>;
+    static tree<N, T = any, K = T>(getValue: (node: N) => T, getChildren: (node: N) => N[] | Iterate<N, any, any> | undefined | null, replaceValue?: (node: N, value: T) => any, getKey?: (node: N) => K): (startingNode?: N, depthFirst?: boolean, strict?: boolean) => Iterate<T, K, N>;
     /**
      * Joins all the given sources into a single iterator where the items
      * returned are in the same order as passed to this function. If any items
@@ -721,4 +755,11 @@ export declare class Iterate<T, K, S> {
      * @returns A new iterator with no items.
      */
     static empty<T, K, S>(): Iterate<T, K, S>;
+    /**
+     * Generates a reusable function which takes a source and performs a
+     * pre-defined set of views, operations, and mutations.
+     *
+     * @param execute The function which performs the function.
+     */
+    static func<T = any, R = void, A extends any[] = [], K = any, S = any>(execute: IterateFunctionExecute<T, R, A, K, S>): IterateFunction<T, R, A, K, S>;
 }

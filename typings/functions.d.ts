@@ -92,3 +92,7 @@ export declare function getDateComparator<K>(ascending?: boolean, nullsFirst?: b
  *    on their timezone.
  */
 export declare function getDateEquality<K>(equalityTimespan?: number, utc?: boolean): IterateEquals<Date, K>;
+/**
+ * Determines whether the given variable is a function.
+ */
+export declare function isFunction(x: any): x is (...args: any[]) => any;

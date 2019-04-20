@@ -1,6 +1,6 @@
-import { getDateComparator, getDateEquality, getNumberComparator, getStringComparator, iterate } from './functions';
+import { getDateComparator, getDateEquality, getNumberComparator, getStringComparator, isFunction, iterate } from './functions';
 import { IterateAction } from "./IterateAction";
-import { GetKeyFor, GetValueFor, HasEntries, IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateSource, IterateSourceType, IterateSourceTypeKey } from "./types";
+import { GetKeyFor, GetValueFor, HasEntries, IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateFunction, IterateFunctionExecute, IterateResult, IterateSource, IterateSourceType, IterateSourceTypeKey } from "./types";
 
 
 /**
@@ -31,7 +31,7 @@ import { GetKeyFor, GetValueFor, HasEntries, IterateCallback, IterateCompare, It
  * - `reduce`: Reduces the items in the view down to a single value.
  * - `min`: Returns the minimum item in the view.
  * - `max`: Returns the maximum item in the view.
- * - `iterate`: Invokes a function for each item in the view.
+ * - `each`: Invokes a function for each item in the view.
  * - `copy`: Copies the items in the view and returns a new iterator.
  * 
  * **Mutations**
@@ -367,96 +367,129 @@ export class Iterate<T, K, S>
   /**
    * An operation that determines whether this iterator is empty.
    *
-   * @returns `true` if no valid items exist in the iterator.
+   * @param setResult A function to pass the result to.
    */
   public empty (): boolean
+  public empty (setResult: IterateResult<boolean>): this
+  public empty (setResult?: IterateResult<boolean>): boolean | this
   {
-    return !this.each((item, key, iterator) => iterator.stop()).isStopped();
+    const result = !this.each((item, key, iterator) => iterator.stop()).isStopped();
+
+    return setResult ? (setResult(result) ? this : this) : result;
   }
 
   /**
    * An operation that determines whether this iterator has an item. 
    *
-   * @returns `true` if no valid items exist in the iterator.
+   * @param setResult A function to pass the result to.
    */
   public has (): boolean
+  public has (setResult: IterateResult<boolean>): this
+  public has (setResult?: IterateResult<boolean>): boolean | this
   {
-    return this.each((item, key, iterator) => iterator.stop()).isStopped();
+    const result = this.each((item, key, iterator) => iterator.stop()).isStopped();
+
+    return setResult ? (setResult(result) ? this : this) : result;
   }
 
   /**
    * An operation that determines whether this iterator has the given value.
    * 
    * @param value The value to search for.
-   * @param equality An override for any existing equality logic.
+   * @param setResult A function to pass the result to.
    */
-  public contains (value: T, equality?: IterateEquals<T, K>): boolean
+  public contains (value: T): boolean
+  public contains (value: T, setResult: IterateResult<boolean>): this
+  public contains (value: T, setResult?: IterateResult<boolean>): boolean | this
   {
-    return this.where((other, otherKey) => this.getEquality(equality)(value, other, undefined, otherKey)).has();
+    const equality = this.getEquality();
+    const result = this.where((other, otherKey) => equality(value, other, undefined, otherKey)).has();
+
+    return setResult ? (setResult(result) ? this : this) : result;
   }
 
   /**
    * An operation that counts the number of items in the iterator.
    *
-   * @returns The number of items in the iterator.
+   * @param setResult A function to pass the count to.
    */
   public count (): number
+  public count (setResult: IterateResult<number>): this
+  public count (setResult?: IterateResult<number>): number | this
   {
-    let total: number = 0;
+    let result: number = 0;
 
-    this.each(() => total++);
+    this.each(() => result++);
 
-    return total;
+    return setResult ? (setResult(result) ? this : this) : result;
   }
 
   /**
    * An operation that returns the first item in the iterator. 
    *
-   * @returns The first item found.
+   * @param setResult A function to pass the first value to.
    */
   public first (): T
+  public first (setResult: IterateResult<T>): this
+  public first (setResult?: IterateResult<T>): T | this
   {
-    return this.each((item, key, iterator) => iterator.stop(item)).result;
+    const result = this.each((item, key, iterator) => iterator.stop(item)).result;
+
+    return setResult ? (setResult(result) ? this : this) : result;
   }
 
   /**
    * An operation that returns the last item in the iterator.
    *
-   * @returns The last item found.
+   * @param setResult A function to pass the last value to.
    */
   public last (): T
+  public last (setResult: IterateResult<T>): this
+  public last (setResult?: IterateResult<T>): T | this
   {
-    let last: T = null;
+    let result: T = null;
 
-    this.each(item => last = item);
+    this.each(item => result = item);
 
-    return last;
+    return setResult ? (setResult(result) ? this : this) : result;
   }
 
   /**
    * An operation that builds an array of items from the source.
    *
    * @param out The array to place the items in.
-   * @returns The reference to `out` which has had items added to it.
+   * @param setResult A function to pass the array to.
    */
-  public array (out: T[] = []): T[]
+  public array (out?: T[]): T[]
+  public array (out: T[], setResult: IterateResult<T[]>): this
+  public array (setResult: IterateResult<T[]>): this
+  public array (outOrResult: T[] | IterateResult<T[]> = [], onResult?: IterateResult<T[]>): T[] | this
   {
-    this.each(item => out.push( item ));
+    const result = isFunction(outOrResult) ? [] : outOrResult;
+    const setResult = isFunction(outOrResult) ? outOrResult : onResult;
 
-    return out;
+    this.each(item => result.push( item ));
+
+    return setResult ? (setResult(result) ? this : this) : result;
   }
 
   /**
    * An operation that builds an array of [key, item] entries from this view.
    *
    * @param out The array to place the entries in.
-   * @returns The reference to `out` which has had entries added to it.
+   * @param setResult A function to pass the entries to.
    */
-  public entries (out: Array<[K, T]> = []): Array<[K, T]>
+  public entries (out?: Array<[K, T]>): Array<[K, T]>
+  public entries (out: Array<[K, T]>, setResult: IterateResult<Array<[K, T]>>): this
+  public entries (setResult: IterateResult<Array<[K, T]>>): this
+  public entries (outOrResult: Array<[K, T]> | IterateResult<Array<[K, T]>> = [], onResult?: IterateResult<Array<[K, T]>>): Array<[K, T]> | this
   {
-    this.each((item, itemKey) => out.push([itemKey, item]));
+    const result = isFunction(outOrResult) ? [] : outOrResult;
+    const setResult = isFunction(outOrResult) ? outOrResult : onResult;
 
-    return out;
+    this.each((item, itemKey) => result.push([itemKey, item]));
+
+    return setResult ? (setResult(result) ? this : this) : result;
   }
 
   /**
@@ -465,39 +498,57 @@ export class Iterate<T, K, S>
    *
    * @param getKey The function which returns the key of the object.
    * @param out The object to place the items in.
-   * @returns The reference to `out` which has had items set to it.
+   * @param setResult A function to pass the object to.
    */
-  public object<O = { [key: string]: T }> (getKey: (item: T) => keyof O, out: O = Object.create(null)): O
+  public object<O = { [key: string]: T }> (getKey: (item: T) => keyof O, out?: O): O
+  public object<O = { [key: string]: T }> (getKey: (item: T) => keyof O, out: O, setResult: IterateResult<O>): this
+  public object<O = { [key: string]: T }> (getKey: (item: T) => keyof O, setResult: IterateResult<O>): this
+  public object<O = { [key: string]: T }> (getKey: (item: T) => keyof O, outOrResult: O | IterateResult<O> = Object.create(null), onResult?: IterateResult<O>): O | this
   {
-    this.each(item => out[ getKey( item ) as string ] = item);
+    const result = isFunction(outOrResult) ? Object.create(null) : outOrResult;
+    const setResult = isFunction(outOrResult) ? outOrResult : onResult;
 
-    return out;
+    this.each(item => result[ getKey( item ) as string ] = item);
+
+    return setResult ? (setResult(result) ? this : this) : result;
   }
 
   /**
    * An operation that builds a Set of items from the source.
    *
    * @param out The Set to place the items in.
-   * @returns The reference to `out` which has had items added to it.
+   * @param setResult A function to pass the set to.
    */
-  public set (out: Set<T> = new Set()): Set<T>
+  public set (out?: Set<T>): Set<T>
+  public set (out: Set<T>, setResult: IterateResult<Set<T>>): this
+  public set (setResult: IterateResult<Set<T>>): this
+  public set (outOrResult: Set<T> | IterateResult<Set<T>> = new Set(), onResult?: IterateResult<Set<T>>): Set<T> | this
   {
-    this.each(item => out.add( item ));
+    const result = isFunction(outOrResult) ? new Set() : outOrResult;
+    const setResult = isFunction(outOrResult) ? outOrResult : onResult;
 
-    return out;
+    this.each(item => result.add( item ));
+
+    return setResult ? (setResult(result) ? this : this) : result;
   }
 
   /**
    * An operation that builds a Map of key-value pairs from the source.
    *
    * @param out The Map to place the items in.
-   * @returns The reference to `out` which has had items added to it.
+   * @param setResult A function to pass the map to.
    */
-  public map (out: Map<K, T> = new Map()): Map<K, T>
+  public map (out?: Map<K, T>): Map<K, T>
+  public map (out: Map<K, T>, setResult: IterateResult<Map<K, T>>): this
+  public map (setResult: IterateResult<Map<K, T>>): this
+  public map (outOrResult: Map<K, T> | IterateResult<Map<K, T>> = new Map(), onResult?: IterateResult<Map<K, T>>): Map<K, T> | this
   {
-    this.each((item, itemKey) => out.set(itemKey, item));
+    const result = isFunction(outOrResult) ? new Map() : outOrResult;
+    const setResult = isFunction(outOrResult) ? outOrResult : onResult;
 
-    return out;
+    this.each((item, itemKey) => result.set(itemKey, item));
+
+    return setResult ? (setResult(result) ? this : this) : result;
   }
 
   /**
@@ -506,25 +557,31 @@ export class Iterate<T, K, S>
    * 
    * @param by A function to get the key from an item.
    * @param out The object to add groups to.
-   * @returns The reference to `out` which has had items added to it.
+   * @param setResult A function to pass the groups to.
    */
-  public group<G extends { [by: string]: T[] }> (by: (item: T) => any, out: G = Object.create(null)): G
+  public group<G extends { [by: string]: T[] }> (by: (item: T) => any, out?: G): G
+  public group<G extends { [by: string]: T[] }> (by: (item: T) => any, out: G, setResult: IterateResult<G>): this
+  public group<G extends { [by: string]: T[] }> (by: (item: T) => any, setResult: IterateResult<G>): this
+  public group<G extends { [by: string]: T[] }> (by: (item: T) => any, outOrResult: G | IterateResult<G> = Object.create(null), onResult?: IterateResult<G>): G | this
   {
+    const result = isFunction(outOrResult) ? Object.create(null) : outOrResult;
+    const setResult = isFunction(outOrResult) ? outOrResult : onResult;
+
     this.each(item => 
     {
       const key = by(item);
 
-      if (key in out) 
+      if (key in result) 
       {
-        out[key].push(item);
+        result[key].push(item);
       } 
       else 
       {
-        out[key] = [item];
+        result[key] = [item];
       }
     });
 
-    return out;
+    return setResult ? (setResult(result) ? this : this) : result;
   }
 
   /**
@@ -536,40 +593,49 @@ export class Iterate<T, K, S>
    *    first time.
    * @param reducer A function which takes an item in the iterator and the 
    *    current reduced value and returns a new reduced value.
+   * @param setResult A function to pass the reduced value to.
    */
   public reduce<R> (initial: R, reducer: (item: T, reduced: R) => R): R
+  public reduce<R> (initial: R, reducer: (item: T, reduced: R) => R, setResult: IterateResult<R>): this
+  public reduce<R> (initial: R, reducer: (item: T, reduced: R) => R, setResult?: IterateResult<R>): R | this
   {
     let reduced: R = initial;
 
     this.each(item => reduced = reducer( item, reduced ));
 
-    return reduced;
+    return setResult ? (setResult(reduced) ? this : this) : reduced;
   }
 
   /**
    * An operation that returns the minimum item in this iterator. If this 
    * iterator is empty null is returned.
    * 
-   * @param comparator An override for any existing comparison logic.
+   * @param setResult A function to pass the minimum value to.
    */
-  public min (comparator?: IterateCompare<T, K>): T
+  public min (): T
+  public min (setResult: IterateResult<T>): this
+  public min (setResult?: IterateResult<T>): T | this
   {
-    const compare = this.getComparator(comparator);
+    const compare = this.getComparator();
+    const result = this.reduce<T>(null, (item, min) => min === null || compare(item, min) < 0 ? item : min);
 
-    return this.reduce<T>(null, (item, min) => min === null || compare(item, min) < 0 ? item : min);
+    return setResult ? (setResult(result) ? this : this) : result;
   }
 
   /**
    * An operation that returns the maximum item in this iterator. If this 
    * iterator is empty null is returned.
    * 
-   * @param comparator An override for any existing comparison logic.
+   * @param setResult A function to pass the maximum value to.
    */
-  public max (comparator?: IterateCompare<T, K>): T
+  public max (): T
+  public max (setResult: IterateResult<T>): this
+  public max (setResult?: IterateResult<T>): T | this
   {
-    const compare = this.getComparator(comparator);
+    const compare = this.getComparator();
+    const result = this.reduce<T>(null, (item, max) => max === null || compare(item, max) > 0 ? item : max);
 
-    return this.reduce<T>(null, (item, max) => max === null || compare(item, max) > 0 ? item : max);
+    return setResult ? (setResult(result) ? this : this) : result;
   }
 
   /**
@@ -585,12 +651,16 @@ export class Iterate<T, K, S>
    * returns a new iterator with the removed items.
    */
   public extract (): Iterate<T, K, Array<[K, T]>>
+  public extract (setResult: IterateResult<Iterate<T, K, Array<[K, T]>>>): this
+  public extract (setResult?: IterateResult<Iterate<T, K, Array<[K, T]>>>): Iterate<T, K, Array<[K, T]>> | this
   {
     const extracted: Array<[K, T]> = [];
 
     this.each((item, key, iterator) => extracted.push([key, item]) && iterator.remove());
 
-    return Iterate.entries(extracted);
+    const result = Iterate.entries(extracted);
+
+    return setResult ? (setResult(result) ? this : this) : result;
   }
 
   /**
@@ -621,7 +691,6 @@ export class Iterate<T, K, S>
    * 
    * @param forker A function which takes the iterator at this point and 
    *    performs any mutations and operations.
-   * @returns The reference to this iterator.
    */
   public fork (forker: (fork: this) => any): this
   {
@@ -708,7 +777,6 @@ export class Iterate<T, K, S>
             break;
         }
       });
-
     });
   }
 
@@ -963,9 +1031,9 @@ export class Iterate<T, K, S>
   public exclude (source: IterateSourceType<T>, equality?: IterateEquals<T, any>): Iterate<T, K, S>;
   public exclude (source: any, equality?: IterateEquals<T, K>): Iterate<T, K, S>
   {
-    return this.view<[IterateEquals<T, K>, Iterate<T, any, any>]>(
-      () => [this.getEquality(equality), iterate(source)],
-      ([isEqual, values], item) => !values.contains(item, isEqual)
+    return this.view<Iterate<T, any, any>>(
+      () => iterate<T, K, S>(source).withEquality(this.getEquality(equality)),
+      (values, item) => !values.contains(item)
     );
   }
 
@@ -979,9 +1047,9 @@ export class Iterate<T, K, S>
   public intersect (source: IterateSourceType<T>, equality?: IterateEquals<T, any>): Iterate<T, K, S>;
   public intersect (source: any, equality?: IterateEquals<T, K>): Iterate<T, K, S>
   {
-    return this.view<[IterateEquals<T, K>, Iterate<T, any, any>]>(
-      () => [this.getEquality(equality), iterate(source)],
-      ([isEqual, values], item) => values.contains(item, isEqual)
+    return this.view<Iterate<T, any, any>>(
+      () => iterate<T, K, S>(source).withEquality(this.getEquality(equality)),
+      (values, item) => values.contains(item)
     );
   }
 
@@ -1044,7 +1112,7 @@ export class Iterate<T, K, S>
         }
       });
 
-    }, this);
+    }, this); // doesnt apply source
   }
 
   /**
@@ -1288,7 +1356,7 @@ export class Iterate<T, K, S>
    * @param items The array of items to iterate.
    * @returns A new iterator for the given array.
    */
-  public static entries<T, K> (items: Array<[K, T]>): Iterate<T, K, Array<[K, T]>>
+  public static entries<T, K> (items: Array<[K, T]> = []): Iterate<T, K, Array<[K, T]>>
   {
     return new Iterate<T, K, Array<[K, T]>>(iterator =>
     {
@@ -1318,7 +1386,7 @@ export class Iterate<T, K, S>
    * @param items The array of items to iterate.
    * @returns A new iterator for the given array.
    */
-  public static array<T> (items: T[]): Iterate<T, number, T[]>
+  public static array<T> (items: T[] = []): Iterate<T, number, T[]>
   {
     return new Iterate<T, number, T[]>(iterator =>
     {
@@ -1353,21 +1421,18 @@ export class Iterate<T, K, S>
    * @param keys The iterator to obtain the keys from.
    * @param values The iterator to obtain the values from.
    */
-  public static zip<T, K, S extends IterateSourceTypeKey<T, K, S>> (keys: S, values: S): Iterate<T, K, S>
-  public static zip<T, K> (keys: IterateSourceTypeKey<K, number>, values: IterateSourceTypeKey<T, number>): Iterate<T, K, any>
-  public static zip<T, K> (keys: IterateSourceType<K>, values: IterateSourceType<T>): Iterate<T, K, any>
-  public static zip<T, K, S> (keySource: any, valueSource: any): Iterate<T, K, S>
+  public static zip<J, K extends GetValueFor<J>, S, T extends GetValueFor<S>>(keySource: J, valueSource: S): Iterate<T, K, [J, S]>
   {
-    const keys = iterate(keySource);
-    const values = iterate(valueSource);
+    const keyIterator = iterate(keySource) as unknown as Iterate<K, GetKeyFor<J>, J>;
+    const valueIterator = iterate(valueSource) as unknown as Iterate<T, GetKeyFor<S>, S>;
 
-    return new Iterate<T, K, S>(next =>
+    return new Iterate<T, K, [J, S]>(next =>
     {
-      const keysArray = keys.array();
+      const keysArray = keyIterator.array();
       const removeKeyAt: number[] = [];
       let valuesIndex = 0;
 
-      values.each((value, ignoreKey, prev) =>
+      valueIterator.each((value, ignoreKey, prev) =>
       {
         if (valuesIndex >= keysArray.length)
         {
@@ -1375,7 +1440,7 @@ export class Iterate<T, K, S>
         }
         else
         {
-          switch (next.act(value as T, keysArray[valuesIndex] as unknown as K))
+          switch (next.act(value, keysArray[valuesIndex]))
           {
             case IterateAction.STOP:
               return;
@@ -1396,7 +1461,7 @@ export class Iterate<T, K, S>
       {
         let keysIndex = 0;
 
-        keys.each((key, ignoreKey, prev) =>
+        keyIterator.each((key, ignoreKey, prev) =>
         {
           if (keysIndex === removeKeyAt[0])
           {
@@ -1422,7 +1487,7 @@ export class Iterate<T, K, S>
    * @param onReplace The function that should handle replacing a value.
    */
   public static hasEntries<T, K, E extends HasEntries<T, K>> (
-    hasEntries: E, 
+    hasEntries?: E, 
     onRemove?: (entries: E, key: K, value: T) => any, 
     onReplace?: (entries: E, key: K, value: T, newValue: T) => any): Iterate<T, K, E>
   {
@@ -1459,9 +1524,10 @@ export class Iterate<T, K, S>
    * @param items The Map of key-value pairs to iterate.
    * @returns A new iterator for the given Map.
    */
-  public static map<T, K> (items: Map<K, T>): Iterate<T, K, Map<K, T>>
+  public static map<T, K> (items: Map<K, T> = new Map<K, T>()): Iterate<T, K, Map<K, T>>
   {
-    return Iterate.hasEntries(items, 
+    return Iterate.hasEntries<T, K, Map<K, T>>(
+      items, 
       (map, key) => map.delete(key), 
       (map, key, value, newValue) => map.set(key, newValue)
     );
@@ -1473,9 +1539,10 @@ export class Iterate<T, K, S>
    * @param items The Set of items to iterate.
    * @returns A new iterator for the given Set.
    */
-  public static set<T> (items: Set<T>): Iterate<T, T, Set<T>>
+  public static set<T> (items: Set<T> = new Set<T>()): Iterate<T, T, Set<T>>
   {
-    return Iterate.hasEntries(items,
+    return Iterate.hasEntries<T, T, Set<T>>(
+      items,
       (set, key) => set.delete(key),
       (set, key, value, newValue) => items.delete(value) && items.add(newValue)
     );
@@ -1487,9 +1554,9 @@ export class Iterate<T, K, S>
    * @param items The iterable collection.
    * @returns A new iterator for the given set.
    */
-  public static iterable<T, I extends Iterable<T>> (items: I): Iterate<T, number, I>
+  public static iterable<T> (items: Iterable<T>): Iterate<T, number, Iterable<T>>
   {
-    return new Iterate<T, number, I>(iterator =>
+    return new Iterate<T, number, Iterable<T>>(iterator =>
     {
       const iterable = items[Symbol.iterator]();
       let index = 0;
@@ -1577,7 +1644,7 @@ export class Iterate<T, K, S>
      * @param strict If an error should be thrown when an unsupported action is
      *    requested.
      */
-    return function linkedIterator(previousNode: N, strict: boolean = true)
+    return function linkedIterator(previousNode?: N, strict: boolean = true)
     {
       return new Iterate<T, K, N>(iterator =>
       {
@@ -1741,7 +1808,7 @@ export class Iterate<T, K, S>
      * @param strict If an error should be thrown when an unsupported action is
      *    requested.
      */
-    return function treeIterator (startingNode: N, depthFirst: boolean = true, strict: boolean = true): Iterate<T, K, N>
+    return function treeIterator (startingNode?: N, depthFirst: boolean = true, strict: boolean = true): Iterate<T, K, N>
     {
       return new Iterate<T, K, N>(iter => depthFirst
         ? traverseDepthFirst(startingNode, iter, strict)
@@ -1804,6 +1871,25 @@ export class Iterate<T, K, S>
   public static empty<T, K, S> (): Iterate<T, K, S>
   {
     return new Iterate<T, K, S>(parent => { return; });
+  }
+
+  /**
+   * Generates a reusable function which takes a source and performs a 
+   * pre-defined set of views, operations, and mutations.
+   * 
+   * @param execute The function which performs the function.
+   */
+  public static func<T = any, R = void, A extends any[] = [], K = any, S = any> (execute: IterateFunctionExecute<T, R, A, K, S>): IterateFunction<T, R, A, K, S>
+  {
+    return (source, ...args) => 
+    {
+      const subject = iterate(source) as unknown as Iterate<T, K, S>;
+      let result: R;
+
+      execute(subject, latestResult => result = latestResult, ...args);
+
+      return result;
+    };
   }
 
 }

@@ -17,6 +17,7 @@ The iterator is lazy, so you can chain "views" and iteration is not done until y
 - You can chain [views](#views) which don't cause iteration until an [operation](#operations) or [mutation](#mutations) are called.
 - You can call [mutations](#mutations) to affect the underlying source.
 - You can call [operations](#operations) to iterate and produce a result.
+- You can create a [reusable function](#reusable-function) to perform operations repeatedly.
 - [Create your own iterator.](#custom-iterators)
 
 You can see all of these features in the [examples](#examples) below.
@@ -319,6 +320,59 @@ const depthFirstList = treeIterator(head).array();
 // Iterate breadth-first and convert to an array
 const breadthFirstList = treeIterator(head, false).array();
 
+```
+
+## Reusable Function
+You can define a function which takes an iterator and performs any 
+number of operations. You can optionally have it return a result.
+
+```typescript
+// Iterate.func<T, R, A, K, S>
+// - T = value type
+// - R = function return type
+// - A = array of parameter types
+// - K = desired key type (restricts the source that can be passed to the function)
+// - S = desired source (type passed to function must match this type)
+
+// A function without a result. If a word contains an a, uppercase the word
+const fn = Iterate.func<string>(
+  source => source
+    .where(x => x.indexOf('a') !== -1)
+    .update(x => x.toUpperCase())
+);
+
+// Any iterable source that has strings as values can be passed to function
+const a = ['apple', 'bit', 'cat'];
+fn(a);
+// a = [APPLE, bit, CAT]
+
+// A function with a result. If a word contains an a, uppercase it. Return the 
+// number of changed words. The counting has to happen before the update
+// since the update would make no values pass the where condition.
+const fn = Iterate.func<string, number>(
+  (source, setResult) => source
+    .where(x => x.indexOf('a') !== -1)
+    .count(setResult)
+    .update(x => x.toUpperCase())
+);
+
+const a = ['apple', 'bit', 'cat'];
+const b = fn(a); // 2
+// a = [APPLE, bit, CAT]
+
+// A function can have special paramters passed to it.
+// Given an array of people, I want a subset of that array given
+// a limit and offset.
+const getPage = Iterate.func<Person, Person[], [number, number]>(
+  (source, setResult, offset, limit) => source
+    .skip(offset)
+    .take(limit)
+    .array(setResult)
+);
+
+const persons: Person[] = ...;
+const page = getPage(persons, 5, 10);
+// page = at most 10 people starting at index 5
 ```
 
 ## Custom Iterators
