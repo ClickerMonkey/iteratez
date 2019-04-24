@@ -453,24 +453,20 @@ const dates = dateIterator.array();
 
 // BONUS!
 // If we want the iz function to return a type Iterator (like Iterate<Date, number, DateRange>)
-// we can add our own iteratez.d.ts file like this:
+// we can add our own declaration file like this:
 
-// <iteratez.d.ts>
+// <types/iteratez/index.d.ts>
 import { Iterate } from 'iteratez';
-
-export * from 'iteratez';
 
 declare module 'iteratez'
 {
   // add the function overload
   export function iterate (range: DateRange): Iterate<Date, number, DateRange>
 }
-// </iteratez.d.ts>
+// </types/iteratez/index.d.ts>
 
 // then instead of this everywhere:
-import iz from 'iteratez';
-// we can do this
-import iz from './path/to/my/iteratez.d';
+import { iz } from 'iteratez';
 
 const dateIterator = iz([new Date(), 3]); // Iterate<Date, number, DateRange> magic!
 ```
