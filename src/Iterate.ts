@@ -1,6 +1,6 @@
 import { defaultCompare, getDateComparator, getDateEquality, getNumberComparator, getStringComparator, isFunction, iterate } from './functions';
 import { IterateAction } from "./IterateAction";
-import { GetKeyFor, GetValueFor, HasEntries, IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateFunction, IterateFunctionExecute, IterateResult, IterateSource, IterateSourceType, IterateSourceTypeKey, IterateReset } from "./types";
+import { GetKeyFor, GetValueFor, HasEntries, IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateFunction, IterateFunctionExecute, IterateReset, IterateResult, IterateSource, IterateSourceType, IterateSourceTypeKey } from "./types";
 
 
 /**
