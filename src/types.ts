@@ -51,6 +51,11 @@ export type IterateEquals<T, K> = (a: T, b: T, aKey?: K, bKey?: K) => boolean;
  */
 export type IterateCompare<T, K> = (a: T, b: T, aKey?: K, bKey?: K) => number;
 
+/**
+ * A function which handles a reset on an iterate.
+ */
+export type IterateReset<S> = (source: S) => any;
+
 
 /**
  * A function that looks at the source and if it can provide an iterator

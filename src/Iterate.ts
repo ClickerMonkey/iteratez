@@ -1,6 +1,6 @@
 import { defaultCompare, getDateComparator, getDateEquality, getNumberComparator, getStringComparator, isFunction, iterate } from './functions';
 import { IterateAction } from "./IterateAction";
-import { GetKeyFor, GetValueFor, HasEntries, IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateFunction, IterateFunctionExecute, IterateResult, IterateSource, IterateSourceType, IterateSourceTypeKey } from "./types";
+import { GetKeyFor, GetValueFor, HasEntries, IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateFunction, IterateFunctionExecute, IterateResult, IterateSource, IterateSourceType, IterateSourceTypeKey, IterateReset } from "./types";
 
 
 /**
@@ -33,6 +33,7 @@ import { GetKeyFor, GetValueFor, HasEntries, IterateCallback, IterateCompare, It
  * - `max`: Returns the maximum value in the view.
  * - `each`: Invokes a function for each value in the view.
  * - `copy`: Copies the values in the view and returns a new iterator.
+ * - `changes`: Notifies you when values are added, removed, or still present on an iterator since the last time called.
  * 
  * **Mutations**
  * - `delete`: Removes values in the view from the source.
@@ -75,6 +76,10 @@ import { GetKeyFor, GetValueFor, HasEntries, IterateCallback, IterateCompare, It
  * - `desc`: Reverses the comparison logic.
  * - `withEquality`: Set a custom equality function.
  * - `withComparator`: Set a custom comparison function.
+ * 
+ * The following function lets you change the source.
+ * 
+ * - `reset`: Specify a new source to iterate over.
  * 
  * The following static functions exist to help iterate simple sources:
  *
@@ -135,6 +140,11 @@ export class Iterate<T, K, S>
   private comparator: IterateCompare<T, K>;
 
   /**
+   * The function to invoke to passing a new source for iteration.
+   */
+  private handleReset: IterateReset<S>;
+
+  /**
    * Creates a new Iterate given a source.
    *
    * @param source The source of values to iterator.
@@ -148,6 +158,48 @@ export class Iterate<T, K, S>
       this.equality = parent.equality;
       this.comparator = parent.comparator;
     }
+  }
+
+  /**
+   * The function which receives a new source to reset iteration.
+   * 
+   * @package handleReset The function which takes the new source.
+   */
+  public onReset (handleReset: IterateReset<S>): this
+  {
+    this.handleReset = handleReset;
+
+    return this;
+  }
+
+  /**
+   * Returns whether the iterator at this point supports a reset.
+   */
+  public canReset (): boolean
+  {
+    return !!this.handleReset;
+  }
+
+  /**
+   * Sets a new source for iteration if supported. If the iterator doesn't 
+   * support resetting the source then an error will be thrown when `strict` 
+   * is true.
+   * 
+   * @param source The new source for iteration.
+   * @param strict If an error should be thrown if the iterator can't be reset.
+   */
+  public reset (source: S, strict: boolean = true): this
+  {
+    if (this.handleReset)
+    {
+      this.handleReset(source);  
+    } 
+    else if (strict) 
+    {
+      throw new Error('This iterator does not support reset.');
+    }
+
+    return this;
   }
 
   /**
@@ -358,7 +410,7 @@ export class Iterate<T, K, S>
   {
     const result = !this.each((value, key, iterator) => iterator.stop()).isStopped();
 
-    return setResult ? (setResult(result) ? this : this) : result;
+    return setResult ? (setResult(result), this) : result;
   }
 
   /**
@@ -372,7 +424,7 @@ export class Iterate<T, K, S>
   {
     const result = this.each((value, key, iterator) => iterator.stop()).isStopped();
 
-    return setResult ? (setResult(result) ? this : this) : result;
+    return setResult ? (setResult(result), this) : result;
   }
 
   /**
@@ -388,7 +440,7 @@ export class Iterate<T, K, S>
     const equality = this.getEquality();
     const result = this.where((other, otherKey) => equality(other, value, otherKey)).has();
 
-    return setResult ? (setResult(result) ? this : this) : result;
+    return setResult ? (setResult(result), this) : result;
   }
 
   /**
@@ -404,7 +456,7 @@ export class Iterate<T, K, S>
 
     this.each(() => result++);
 
-    return setResult ? (setResult(result) ? this : this) : result;
+    return setResult ? (setResult(result), this) : result;
   }
 
   /**
@@ -418,7 +470,7 @@ export class Iterate<T, K, S>
   {
     const result = this.each((value, key, iterator) => iterator.stop(value)).result;
 
-    return setResult ? (setResult(result) ? this : this) : result;
+    return setResult ? (setResult(result), this) : result;
   }
 
   /**
@@ -434,7 +486,7 @@ export class Iterate<T, K, S>
 
     this.each(value => result = value);
 
-    return setResult ? (setResult(result) ? this : this) : result;
+    return setResult ? (setResult(result), this) : result;
   }
 
   /**
@@ -453,7 +505,7 @@ export class Iterate<T, K, S>
 
     this.each(value => result.push( value ));
 
-    return setResult ? (setResult(result) ? this : this) : result;
+    return setResult ? (setResult(result), this) : result;
   }
 
   /**
@@ -472,7 +524,7 @@ export class Iterate<T, K, S>
 
     this.each((value, key) => result.push([key, value]));
 
-    return setResult ? (setResult(result) ? this : this) : result;
+    return setResult ? (setResult(result), this) : result;
   }
 
   /**
@@ -493,7 +545,7 @@ export class Iterate<T, K, S>
 
     this.each(value => result[ getKey( value ) as string ] = value);
 
-    return setResult ? (setResult(result) ? this : this) : result;
+    return setResult ? (setResult(result), this) : result;
   }
 
   /**
@@ -512,7 +564,7 @@ export class Iterate<T, K, S>
 
     this.each(value => result.add( value ));
 
-    return setResult ? (setResult(result) ? this : this) : result;
+    return setResult ? (setResult(result), this) : result;
   }
 
   /**
@@ -531,7 +583,7 @@ export class Iterate<T, K, S>
 
     this.each((value, key) => result.set(key, value));
 
-    return setResult ? (setResult(result) ? this : this) : result;
+    return setResult ? (setResult(result), this) : result;
   }
 
   /**
@@ -564,7 +616,7 @@ export class Iterate<T, K, S>
       }
     });
 
-    return setResult ? (setResult(result) ? this : this) : result;
+    return setResult ? (setResult(result), this) : result;
   }
 
   /**
@@ -586,7 +638,7 @@ export class Iterate<T, K, S>
 
     this.each(value => reduced = reducer( value, reduced ));
 
-    return setResult ? (setResult(reduced) ? this : this) : reduced;
+    return setResult ? (setResult(reduced), this) : reduced;
   }
 
   /**
@@ -602,7 +654,7 @@ export class Iterate<T, K, S>
     const compare = this.getComparator();
     const result = this.reduce<T>(null, (value, min) => min === null || compare(value, min) < 0 ? value : min);
 
-    return setResult ? (setResult(result) ? this : this) : result;
+    return setResult ? (setResult(result), this) : result;
   }
 
   /**
@@ -618,7 +670,89 @@ export class Iterate<T, K, S>
     const compare = this.getComparator();
     const result = this.reduce<T>(null, (value, max) => max === null || compare(value, max) > 0 ? value : max);
 
-    return setResult ? (setResult(result) ? this : this) : result;
+    return setResult ? (setResult(result), this) : result;
+  }
+
+  /**
+   * A map of key-value pairs stored from the last time `changes` was invoked.
+   * 
+   * The keys are the value in the iterator or a dynamically created value
+   * returned by the `getIdentifier` function. If that function is provided
+   * once it must always be provided to ensure correct change detection.
+   */
+  protected history: Map<any, [K, T]>;
+
+  /**
+   * An operation which determines which changes have occurred in the source 
+   * since the last time the changes operation was called. The changes 
+   * operation needs to be called on the same exact iterator instance to 
+   * properly track changes. You should avoid sharing an iterator or using 
+   * reset for an iterator that you're using to track changes.
+   * 
+   * Optionally you can provide a `getIdentifier` function which can convert
+   * a value into a more optimal value for comparison. The value returned 
+   * will be compared by reference so a scalar value (number, string, etc)
+   * is ideal but other identifiers can be returned as long as they are
+   * the same reference and not dynamically generated.
+   * 
+   * The first time this operation is performed all the values in the iterator
+   * will be passed through the `onAdd` function.
+   * 
+   * The `onRemove` function is only called at the very end of the changes 
+   * logic.
+   * 
+   * @param onAdd The function to invoke for each value added since the 
+   *    last `changes` operation,
+   * @param onRemove The function to invoke for each value removed since the
+   *    last `changes` operation. This function is called zero or more times
+   *    at the end of the changes logic.
+   * @param onPresent The function to invoke for each value that was in the 
+   *    iterator before and is still in the iterator.
+   * @param getIdentifier A function to use to create a simpler way to identify
+   *    a value. The simpler the value returned the better the performance 
+   *    of the changes logic. If this function is passed once, it should be 
+   *    passed everytime or the results of this function will not be accurate.
+   */
+  public changes (
+    onAdd: IterateCallback<T, K, S, any>, 
+    onRemove: IterateCallback<T, K, S, any>,
+    onPresent: IterateCallback<T, K, S, any>,
+    getIdentifier?: IterateCallback<T, K, S, any>): this
+  {
+    if (!this.history)
+    {
+      this.history = new Map<any, [K, T]>();
+    }
+
+    const notRemoved = new Map<any, [K, T]>(this.history);
+
+    this.each((value, key, iterator) =>
+    {
+      const mapKey = getIdentifier ? getIdentifier(value, key, iterator) : value;
+
+      if (this.history.has(mapKey))
+      {
+        onPresent(value, key, iterator);
+      }
+      else
+      {
+        onAdd(value, key, iterator);
+
+        if (iterator.result !== IterateAction.REMOVE)
+        {
+          this.history.set(mapKey, [key, value]);
+        }
+      }
+
+      notRemoved.delete(mapKey);
+    });
+
+    for (const [key, value] of notRemoved.values())
+    {
+      onRemove(value, key, this);
+    }
+    
+    return this;
   }
 
   /**
@@ -643,7 +777,7 @@ export class Iterate<T, K, S>
 
     const result = Iterate.entries(extracted);
 
-    return setResult ? (setResult(result) ? this : this) : result;
+    return setResult ? (setResult(result), this) : result;
   }
 
   /**
@@ -760,7 +894,7 @@ export class Iterate<T, K, S>
             break;
         }
       });
-    });
+    }).onReset(this.handleReset);
   }
 
   /**
@@ -789,7 +923,7 @@ export class Iterate<T, K, S>
         }
       });
 
-    }, this);
+    }, this).onReset(this.handleReset);
   }
 
   /**
@@ -838,7 +972,7 @@ export class Iterate<T, K, S>
         }
       });
 
-    }, this);
+    }, this).onReset(this.handleReset);
   }
 
   /**
@@ -900,7 +1034,7 @@ export class Iterate<T, K, S>
   public append (...sources: IterateSourceType<any>[]): Iterate<any, any, any>;
   public append (...sources: any[]): Iterate<any, any, any>
   {
-    return Iterate.join( this, ...sources );
+    return Iterate.join( this, ...sources ).onReset(this.handleReset);
   }
 
   /**
@@ -915,7 +1049,7 @@ export class Iterate<T, K, S>
   public prepend (...sources: IterateSourceType<any>[]): Iterate<any, any, any>;
   public prepend (...sources: any[]): Iterate<any, any, any>
   {
-    return Iterate.join( ...sources, this );
+    return Iterate.join( ...sources, this ).onReset(this.handleReset);
   }
 
   /**
@@ -1095,7 +1229,7 @@ export class Iterate<T, K, S>
         }
       });
 
-    }, this); // doesnt apply source
+    }, this).onReset(this.handleReset);
   }
 
   /**
@@ -1164,7 +1298,7 @@ export class Iterate<T, K, S>
         });
       }
 
-    }, this);
+    }, this).onReset(this.handleReset);
   }
 
   /**
@@ -1288,7 +1422,7 @@ export class Iterate<T, K, S>
           }
         }
       });
-    });
+    }).onReset(this.handleReset);
   }
 
   /**
@@ -1360,7 +1494,7 @@ export class Iterate<T, K, S>
             break;
         }
       }
-    });
+    }).onReset(source => values = source);
   }
 
   /**
@@ -1388,7 +1522,7 @@ export class Iterate<T, K, S>
             break;
         }
       }
-    });
+    }).onReset(source => values = source);
   }
 
   /**
@@ -1406,8 +1540,8 @@ export class Iterate<T, K, S>
    */
   public static zip<J, K extends GetValueFor<J>, S, T extends GetValueFor<S>>(keySource: J, valueSource: S): Iterate<T, K, [J, S]>
   {
-    const keyIterator = iterate(keySource) as unknown as Iterate<K, GetKeyFor<J>, J>;
-    const valueIterator = iterate(valueSource) as unknown as Iterate<T, GetKeyFor<S>, S>;
+    let keyIterator = iterate(keySource) as unknown as Iterate<K, GetKeyFor<J>, J>;
+    let valueIterator = iterate(valueSource) as unknown as Iterate<T, GetKeyFor<S>, S>;
 
     return new Iterate<T, K, [J, S]>(next =>
     {
@@ -1459,6 +1593,10 @@ export class Iterate<T, K, S>
           keysIndex++;
         });
       }
+    }).onReset(([keys, values]: [J, S]) => 
+    {
+      keyIterator = iterate(keys) as unknown as Iterate<K, GetKeyFor<J>, J>;
+      valueIterator = iterate(values) as unknown as Iterate<T, GetKeyFor<S>, S>;
     });
   }
 
@@ -1498,7 +1636,7 @@ export class Iterate<T, K, S>
             break;
         }
       }
-    });
+    }).onReset(source => hasEntries = source);
   }
 
   /**
@@ -1551,7 +1689,7 @@ export class Iterate<T, K, S>
           break;
         }
       }
-    });
+    }).onReset(source => values = source);
   }
 
   /**
@@ -1585,7 +1723,7 @@ export class Iterate<T, K, S>
             break;
         }
       }
-    });
+    }).onReset(source => values = source);
   }
 
   /**
@@ -1669,7 +1807,7 @@ export class Iterate<T, K, S>
 
           curr = next;
         }
-      });
+      }).onReset(source => previousNode = source);
     };
   }
 
@@ -1796,7 +1934,7 @@ export class Iterate<T, K, S>
       return new Iterate<T, K, N>(iter => depthFirst
         ? traverseDepthFirst(startingNode, iter, strict)
         : traverseBreadthFirst(startingNode, iter, strict)
-      );
+      ).onReset(source => startingNode = source);
     };
   }
 

@@ -1,5 +1,5 @@
 import { IterateAction } from "./IterateAction";
-import { GetKeyFor, GetValueFor, HasEntries, IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateFunction, IterateFunctionExecute, IterateResult, IterateSource, IterateSourceType, IterateSourceTypeKey } from "./types";
+import { GetKeyFor, GetValueFor, HasEntries, IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateFunction, IterateFunctionExecute, IterateResult, IterateSource, IterateSourceType, IterateSourceTypeKey, IterateReset } from "./types";
 /**
  * A class that allows an iteratable source to be iterated any number of times.
  *
@@ -123,11 +123,34 @@ export declare class Iterate<T, K, S> {
      */
     private comparator;
     /**
+     * The function to invoke to passing a new source for iteration.
+     */
+    private handleReset;
+    /**
      * Creates a new Iterate given a source.
      *
      * @param source The source of values to iterator.
      */
     constructor(source: IterateSource<T, K, S>, parent?: Iterate<T, any, any>);
+    /**
+     * The function which receives a new source to reset iteration.
+     *
+     * @package handleReset The function which takes the new source.
+     */
+    onReset(handleReset: IterateReset<S>): this;
+    /**
+     * Returns whether the iterator at this point supports a reset.
+     */
+    canReset(): boolean;
+    /**
+     * Sets a new source for iteration if supported. If the iterator doesn't
+     * support resetting the source then an error will be thrown when `strict`
+     * is true.
+     *
+     * @param source The new source for iteration.
+     * @param strict If an error should be thrown if the iterator can't be reset.
+     */
+    reset(source: S, strict?: boolean): this;
     /**
      * Returns a clone of this iterator with the same source. This is necessary
      * if you want to iterate all or a portion of the source while already
@@ -378,6 +401,46 @@ export declare class Iterate<T, K, S> {
      */
     max(): T;
     max(setResult: IterateResult<T>): this;
+    /**
+     * A map of key-value pairs stored from the last time `changes` was invoked.
+     *
+     * The keys are the value in the iterator or a dynamically created value
+     * returned by the `getIdentifier` function. If that function is provided
+     * once it must always be provided to ensure correct change detection.
+     */
+    protected history: Map<any, [K, T]>;
+    /**
+     * An operation which determines which changes have occurred in the source
+     * since the last time the changes operation was called. The changes
+     * operation needs to be called on the same exact iterator instance to
+     * properly track changes. You should avoid sharing an iterator or using
+     * reset for an iterator that you're using to track changes.
+     *
+     * Optionally you can provide a `getIdentifier` function which can convert
+     * a value into a more optimal value for comparison. The value returned
+     * will be compared by reference so a scalar value (number, string, etc)
+     * is ideal but other identifiers can be returned as long as they are
+     * the same reference and not dynamically generated.
+     *
+     * The first time this operation is performed all the values in the iterator
+     * will be passed through the `onAdd` function.
+     *
+     * The `onRemove` function is only called at the very end of the changes
+     * logic.
+     *
+     * @param onAdd The function to invoke for each value added since the
+     *    last `changes` operation,
+     * @param onRemove The function to invoke for each value removed since the
+     *    last `changes` operation. This function is called zero or more times
+     *    at the end of the changes logic.
+     * @param onPresent The function to invoke for each value that was in the
+     *    iterator before and is still in the iterator.
+     * @param getIdentifier A function to use to create a simpler way to identify
+     *    a value. The simpler the value returned the better the performance
+     *    of the changes logic. If this function is passed once, it should be
+     *    passed everytime or the results of this function will not be accurate.
+     */
+    changes(onAdd: IterateCallback<T, K, S, any>, onRemove: IterateCallback<T, K, S, any>, onPresent: IterateCallback<T, K, S, any>, getIdentifier?: IterateCallback<T, K, S, any>): this;
     /**
      * A mutation which removes values in this iterator from the source.
      */

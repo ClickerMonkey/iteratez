@@ -73,6 +73,7 @@ Returns an iterator...
 - `max`: Returns the maximum value in the view.
 - `iterate`: Invokes a function for each value in the view.
 - `copy`: Copies the values in the view and returns a new iterator.
+- `changes`: Notifies you when values are added, removed, or still present on an iterator since the last time called.
 
 ### Comparison Logic
 The following chainable functions define how values should be compared.
@@ -83,6 +84,11 @@ The following chainable functions define how values should be compared.
 - `desc`: Reverses the comparison logic.
 - `withEquality`: Set a custom equality function.
 - `withComparator`: Set a custom comparison function.
+
+### Reset
+The following function(s) allow you to change the source for iteration.
+
+- `reset`: Sets a new source to iterate.
 
 ### Other Functions
 The following static functions exist to help iterate simple sources:
@@ -172,6 +178,7 @@ let reduced = source.reduce(R, (T, R) => R); // R
 let min = source.min(); // T
 let max = source.max(); // T
 let copy = source.copy(): // Iterate<T>
+let that = source.changes(onAdd, onRemove, onPresent); // this
 
 // ============ Mutations ============ 
 // These are at the end of a chain of views and they
@@ -235,6 +242,8 @@ source.strings(sensitive?, ascending?, nullsFirst?); // string logic
 source.dates(equalityTimespan?, utc?, ascending?, nullsFirst?); // date logic
 source.desc(); // reverse comparison logic
 
+// ============ Reset ============ 
+source.reset(['a', 'new', 'source', 'to', 'iterate']);
 
 // ============ Examples ============ 
 // Views ending with an operation or mutation.

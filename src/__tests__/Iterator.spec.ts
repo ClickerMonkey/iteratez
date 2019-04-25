@@ -18,7 +18,62 @@ describe('Iterate', () => {
     ;
 
     expect( a ).toEqual( [1, 3] );
-  })
+  });
+
+  it('reset', () =>
+  {
+    const a = [1, 2, 3];
+    const b = [4, 5, 6, 7, 8];
+    const c = Iterate.array(a);
+
+    expect( c.count() ).toEqual( 3 );
+
+    expect( c.reset( b ).count() ).toEqual( 5 );
+
+    c.skip(3).delete();
+
+    expect( a ).toEqual( [1, 2, 3] );
+    expect( b ).toEqual( [4, 5, 6] );
+  });
+
+  it('changes', () =>
+  {
+    const isEven = (x: number) => x % 2 === 0;
+    const a = [1, 2, 3, 4, 5, 6];
+
+    const c = Iterate.array(a).where(isEven);
+
+    const added0: number[] = [];
+    const removed0: number[] = [];
+    const present0: number[] = [];
+
+    c.changes(
+      x => added0.push(x),
+      x => removed0.push(x),
+      x => present0.push(x)
+    );
+
+    expect( added0 ).toEqual( [2, 4, 6] );
+    expect( removed0 ).toEqual( [] );
+    expect( present0 ).toEqual( [] );
+
+    a.splice(1, 1);
+    a.push(8);
+
+    const added1: number[] = [];
+    const removed1: number[] = [];
+    const present1: number[] = [];
+
+    c.changes(
+      x => added1.push(x),
+      x => removed1.push(x),
+      x => present1.push(x)
+    );
+
+    expect( added1 ).toEqual( [8] );
+    expect( removed1 ).toEqual( [2] );
+    expect( present1 ).toEqual( [4, 6] );
+  });
 
   it('empty', () =>
   {
