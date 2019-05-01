@@ -52,7 +52,8 @@ Returns an iterator...
 
 ### Mutations
 - `delete`: Removes values in the view from the source.
-- `overwrite`: Replaces values in the view from the source.
+- `overwrite`: Replaces values in the view from the source with a constant replacement.
+- `update`: Replace values in the view from the source with a dynamic replacement.
 - `extract`: Removes values in the view from the source and returns a new iterator with the removed values.
 
 ### Operations
@@ -186,6 +187,8 @@ source.extract(); // does a delete and returns a new iterator with the removed v
 source.overwrite(42); // replaces all values in iterator
 source.where(x => x > 34).overwrite(12); // replace all numbers over 34 with 12
 
+source.update(x => x * 2); // multiply all numbers by 2
+
 // ============ Views ============ 
 // These are chainable, at the end if you call an operation it performs
 // it only on the values in the iterator at that point. If you call
@@ -293,7 +296,7 @@ const head: Node<string> = ...;
 linkedIterator(head)
   .where(x => /regex/.test(x))
   .fork(f => f.strings().sorted().take(5).delete())
-  .list();
+  .array();
 
 
 // ============ Tree ============ 
