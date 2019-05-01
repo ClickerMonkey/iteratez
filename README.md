@@ -52,7 +52,8 @@ Returns an iterator...
 
 ### Mutations
 - `delete`: Removes values in the view from the source.
-- `overwrite`: Replaces values in the view from the source.
+- `overwrite`: Replaces values in the view from the source with a constant replacement.
+- `update`: Replace values in the view from the source with a dynamic replacement.
 - `extract`: Removes values in the view from the source and returns a new iterator with the removed values.
 
 ### Operations
@@ -193,6 +194,8 @@ source.extract(); // does a delete and returns a new iterator with the removed v
 source.overwrite(42); // replaces all values in iterator
 source.where(x => x > 34).overwrite(12); // replace all numbers over 34 with 12
 
+source.update(x => x * 2); // multiply all numbers by 2
+
 // ============ Views ============ 
 // These are chainable, at the end if you call an operation it performs
 // it only on the values in the iterator at that point. If you call
@@ -302,7 +305,7 @@ const head: Node<string> = ...;
 linkedIterator(head)
   .where(x => /regex/.test(x))
   .fork(f => f.strings().sorted().take(5).delete())
-  .list();
+  .array();
 
 
 // ============ Tree ============ 
@@ -462,24 +465,20 @@ const dates = dateIterator.array();
 
 // BONUS!
 // If we want the iz function to return a type Iterator (like Iterate<Date, number, DateRange>)
-// we can add our own iteratez.d.ts file like this:
+// we can add our own declaration file like this:
 
-// <iteratez.d.ts>
+// <types/iteratez/index.d.ts>
 import { Iterate } from 'iteratez';
-
-export * from 'iteratez';
 
 declare module 'iteratez'
 {
   // add the function overload
   export function iterate (range: DateRange): Iterate<Date, number, DateRange>
 }
-// </iteratez.d.ts>
+// </types/iteratez/index.d.ts>
 
 // then instead of this everywhere:
-import iz from 'iteratez';
-// we can do this
-import iz from './path/to/my/iteratez.d';
+import { iz } from 'iteratez';
 
 const dateIterator = iz([new Date(), 3]); // Iterate<Date, number, DateRange> magic!
 ```
