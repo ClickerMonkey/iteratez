@@ -1,5 +1,5 @@
 import { IterateAction } from "./IterateAction";
-import { GetKeyFor, GetValueFor, HasEntries, IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateFunction, IterateFunctionExecute, IterateResult, IterateSource, IterateSourceType, IterateSourceTypeKey, IterateReset } from "./types";
+import { GetKeyFor, GetValueFor, HasEntries, IterateCallback, IterateCompare, IterateEquals, IterateFilter, IterateFunction, IterateFunctionExecute, IterateReset, IterateResult, IterateSource, IterateSourceType, IterateSourceTypeKey } from "./types";
 /**
  * A class that allows an iteratable source to be iterated any number of times.
  *
@@ -30,6 +30,7 @@ import { GetKeyFor, GetValueFor, HasEntries, IterateCallback, IterateCompare, It
  * - `max`: Returns the maximum value in the view.
  * - `each`: Invokes a function for each value in the view.
  * - `copy`: Copies the values in the view and returns a new iterator.
+ * - `changes`: Notifies you when values are added, removed, or still present on an iterator since the last time called.
  *
  * **Mutations**
  * - `delete`: Removes values in the view from the source.
@@ -72,6 +73,10 @@ import { GetKeyFor, GetValueFor, HasEntries, IterateCallback, IterateCompare, It
  * - `desc`: Reverses the comparison logic.
  * - `withEquality`: Set a custom equality function.
  * - `withComparator`: Set a custom comparison function.
+ *
+ * The following function lets you change the source.
+ *
+ * - `reset`: Specify a new source to iterate over.
  *
  * The following static functions exist to help iterate simple sources:
  *

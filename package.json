@@ -1,6 +1,6 @@
 {
   "name": "iteratez",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "A powerful functional iterator, transformer, and mutator - like Underscore.js, except for everything",
   "main": "dist/iteratez.js",
   "typings": "typings/index.d.ts",
@@ -17,8 +17,8 @@
   },
   "scripts": {
     "start": "webpack-dev-server --port 9000 --inline --progress --profile --colors --watch --content-base src/ --mode development",
-    "build": "webpack --config webpack.config.js --mode production",
-    "build.prod": "webpack --config webpack.config.js -p",
+    "build": "webpack --config webpack.config.js --mode production && cp src/types.ts typings/types.d.ts",
+    "build.prod": "webpack --config webpack.config.js -p && cp src/types.ts typings/types.d.ts",
     "test": "jest",
     "test.debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
     "cleanup": "shx rm -rf umd lib lib-esm lib-fesm typings coverage ../iteratez-pages/docs",
