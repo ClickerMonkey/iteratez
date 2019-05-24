@@ -1,7 +1,7 @@
 /**
  * An action to perform on the source as instructed by the iterator.
  */
-export declare const enum IterateAction {
+export declare enum IterateAction {
     /**
      * Continue iteration.
      */
